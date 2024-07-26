@@ -4,9 +4,14 @@
 
 namespace DDR
 {
-	class DialogueManager
+	class ResponseManager
 	{
+	public:
+		static void Init();
+		static Response* FindReplacement(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::BGSVoiceType* a_voiceType, RE::TESTopicInfo::ResponseData* a_responseData);
 	private:
-		std::unordered_map<std::string, Response> _responses;
+		static inline bool _init = false;
+		static inline std::vector<Response> _responses;
+		static inline std::map<std::string, std::vector<Response*>> _replacements;
 	};
 }

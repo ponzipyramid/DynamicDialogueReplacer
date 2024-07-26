@@ -30,6 +30,7 @@ include(XSEPlugin)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(xbyak CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(yaml-cpp REQUIRED)
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
 find_library(Detours_LIBRARIES NAMES detours.lib)
 
@@ -44,6 +45,7 @@ target_link_libraries(
 	PRIVATE
 	magic_enum::magic_enum
 	xbyak::xbyak
+	yaml-cpp::yaml-cpp
 	nlohmann_json::nlohmann_json
 	${Detours_LIBRARIES}
 )
