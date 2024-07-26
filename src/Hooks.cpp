@@ -29,14 +29,21 @@ void Hooks::Install()
 int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5)
 {
 	_response = ResponseManager::FindReplacement(a_4, a_3, a_4->GetActorBase()->GetVoiceType(), a_5);
-	logger::info("PopulateTopicInfo - {}", _response != nullptr);
+
+	if (a_3->GetFormID() == 546040) {
+		logger::info("PopulateTopicInfo - {} - {}", a_3->GetFormID(), _response != nullptr);
+	}
+
 	return _PopulateTopicInfo(a_1, a_2, a_3, a_4, a_5);
 }
 
 char* Hooks::SetSubtitle(DialogueResponse* a_response, char* a_text, int32_t a_3)
 {
-	std::string text{ _response ? _response->GetSubtitle() : a_text };
-	logger::info("SetSubtitle - {} - {}", a_text, text);
+	std::string repl{ _response ? _response->GetSubtitle() : "" };
+	std::string text{ repl.empty() ? a_text : repl };
+
+	//logger::info("SetSubtitle - {} - {}", a_text, text);
+
 	return _SetSubtitle(a_response, text.data(), a_3);
 }
 
@@ -45,13 +52,15 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 	if (_ConstructResponse(a_response, a_filePath, a_voiceType, a_topic, a_topicInfo)) {
 		std::string filePath{ a_filePath };
 		
-		if (_response)
+		const std::string repl{ _response ? _response->GetPath(a_topic, a_topicInfo, a_voiceType) : "" };
+
+		if (!repl.empty())
 		{
 			*a_filePath = NULL;
-			strcat_s(a_filePath, 0x104ui64, _response->GetPath(a_topic, a_topicInfo, a_voiceType).c_str());
+			strcat_s(a_filePath, 0x104ui64, repl.c_str());
+			logger::info("ConstructResponse - {} - {}", filePath, a_filePath);
 		}
 
-		logger::info("ConstructResponse - {} - {}", filePath, a_filePath);
 
 		return true;
 	} else {

@@ -106,7 +106,10 @@ using json = nlohmann::json;
 #include "SimpleMath.h"
 
 #include "detours/detours.h"
+#include <yaml-cpp/yaml.h>
 
 using uint = uint32_t;
+
+namespace fs = std::filesystem;
 
 #define DLLEXPORT __declspec(dllexport)

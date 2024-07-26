@@ -27,13 +27,22 @@ void InitializeLog([[maybe_unused]] spdlog::level::level_enum a_level = spdlog::
 	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%t] [%s:%#] %v");
 }
 
+void Listener(SKSE::MessagingInterface::Message* message) noexcept
+{
+	if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+		ResponseManager::Init();
+	}
+}
+
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
 	InitializeLog();
 	logger::info("Loaded plugin {} {}", Plugin::NAME, Plugin::VERSION.string());
 	SKSE::Init(a_skse);
 
-	ResponseManager::Init();
+	if (const auto messaging{ SKSE::GetMessagingInterface() }; !messaging->RegisterListener(Listener))
+		return false;
+	
 	Hooks::Install();
 
 	return true;
