@@ -108,6 +108,8 @@ using json = nlohmann::json;
 #include "detours/detours.h"
 #include <yaml-cpp/yaml.h>
 
+#include <srell.hpp>
+
 using uint = uint32_t;
 
 namespace fs = std::filesystem;
