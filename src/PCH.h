@@ -106,3 +106,5 @@ using json = nlohmann::json;
 #include "SimpleMath.h"
 
 using uint = uint32_t;
+
+#define DLLEXPORT __declspec(dllexport)
