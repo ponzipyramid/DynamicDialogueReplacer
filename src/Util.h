@@ -6,6 +6,7 @@ namespace DDR::Util
 	using SKSE::stl::report_and_fail;
 	using SKSE::stl::to_underlying;
 
+	const char* ws = " \t\n\r\f\v";
 
 	inline std::vector<std::string> Split(const std::string& a_str, std::string_view a_delimiter)
 	{
@@ -21,7 +22,6 @@ namespace DDR::Util
 			});
 	}
 
-
 	inline std::string str_toupper(std::string s)
 	{
 		std::transform(
@@ -32,5 +32,41 @@ namespace DDR::Util
 				return static_cast<char>(std::toupper(c));
 			});
 		return s;
+	}
+
+	inline std::string& rtrim(std::string& s, const char* t = ws)
+	{
+		s.erase(s.find_last_not_of(t) + 1);
+		return s;
+	}
+
+	inline std::string& ltrim(std::string& s, const char* t = ws)
+	{
+		s.erase(0, s.find_first_not_of(t));
+		return s;
+	}
+
+	inline std::string& trim(std::string& s, const char* t = ws)
+	{
+		return ltrim(rtrim(s, t), t);
+	}
+
+	template <typename T = RE::TESForm>
+	inline T* GetFormFromString(const std::string& s)
+	{
+		const auto splits = Split(s, "|"sv);
+
+		if (splits.size() != 2) {
+			return nullptr;
+		}
+
+		char* p;
+		const auto formId = std::strtol(splits[0].c_str(), &p, 16);
+
+		if (*p != 0) {
+			return nullptr;
+		}
+
+		return RE::TESDataHandler::GetSingleton()->LookupForm<T>(formId, splits[1]);
 	}
 }

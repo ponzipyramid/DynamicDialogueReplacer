@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Util.h"
+#include "ConditionParser.h"
 
 namespace DDR
 {
@@ -9,6 +10,9 @@ namespace DDR
 	public:
 		static inline std::string GenerateHash(RE::TESTopicInfo* a_topicInfo, RE::BGSVoiceType* a_voiceType, int index)
 		{
+			if (!a_topicInfo || !a_voiceType || index < 1)
+				return "";
+
 			return std::format("{}|{}|{}", a_topicInfo->GetFormID(), a_voiceType->GetFormEditorID(), index);
 		}
 		inline bool IsValid() { return _valid; }
@@ -41,7 +45,36 @@ namespace DDR
 
 			return Util::Join(sections, "\\"sv); 
 		}
+		inline bool InitConditions(ConditionParser::RefMap a_refs)
+		{
+			auto condition = std::make_shared<RE::TESCondition>();
+			RE::TESConditionItem** head = std::addressof(condition->head);
+			int numConditions = 0;
+
+			for (auto& text : _rawConditions) {
+				if (text.empty())
+					continue;
+
+				if (auto conditionItem = ConditionParser::Parse(text, a_refs)) {
+					*head = conditionItem;
+					head = std::addressof(conditionItem->next);
+					numConditions += 1;
+				} else {
+					logger::info("Aborting condition parsing"sv);
+					return false;
+				}
+			}
+
+			logger::info("parsed {} conditions", numConditions);
+
+			_conditions = numConditions ? condition : nullptr;
+			_rawConditions.clear();
+
+			return true;
+		}
 		inline bool ConditionsMet(RE::Actor* a_speaker, RE::TESObjectREFR* a_target) {
+			logger::info("ConditionsMet: {}", _conditions && _conditions->IsTrue(a_speaker, a_target ? a_target : a_speaker));
+
 			return _conditions == nullptr || _conditions->IsTrue(a_speaker, a_target ? a_target : a_speaker);
 		}
 	private:
@@ -53,7 +86,8 @@ namespace DDR
 		
 		int _index; 
 		
-		RE::TESCondition* _conditions = nullptr;
+		std::vector<std::string> _rawConditions;
+		std::shared_ptr<RE::TESCondition> _conditions = nullptr;
 
 		bool _valid = false;
 
@@ -72,10 +106,13 @@ namespace YAML
 		{
 			rhs._path = node["path"].as<std::string>("");
 			rhs._subtitle = node["sub"].as<std::string>("");
-			rhs._index = node["index"].as<int>(-1);
+			rhs._index = node["index"].as<int>(0);
+			rhs._rawConditions = node["conditions"].as<std::vector<std::string>>(std::vector<std::string>{});
 
-			if (rhs._index < 0)
+			if (rhs._index <= 0) {
+				logger::info("index is required and must be greater than zero");
 				return true;
+			}
 			
 			const auto voiceTypes = node["voices"].as<std::vector<std::string>>(std::vector<std::string>{});
 
@@ -95,22 +132,7 @@ namespace YAML
 			}
 
 			const auto topicInfo = node["id"].as<std::string>();
-			
-			const auto splits = Util::Split(topicInfo, "|"sv);
-
-			if (splits.size() != 2) {
-				logger::error("topic info formatted incorrectly");
-				return true;
-			}
-
-			char* p;
-			const auto formId = std::strtol(splits[0].c_str(), &p, 16);
-
-			if (*p != 0) {
-				logger::error("topic info form id not valid");
-			}
-
-			rhs._topicInfo = RE::TESDataHandler::GetSingleton()->LookupForm<RE::TESTopicInfo>(formId, splits[1]);
+			rhs._topicInfo = Util::GetFormFromString<RE::TESTopicInfo>(topicInfo);
 
 			if (!rhs._topicInfo) {	
 				logger::error("topic info does not exist");

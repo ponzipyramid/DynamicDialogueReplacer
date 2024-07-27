@@ -1,6 +1,5 @@
 #include "ConditionParser.h"
 #include "EnumLookup.h"
-#include "Util.h"
 
 // stolen from DAV (https://github.com/Exit-9B/DynamicArmorVariants)
 
@@ -8,12 +7,19 @@ using namespace DDR;
 
 auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE::TESConditionItem*
 {
+	const auto splits = Util::Split(std::string{ a_text }, "<>"sv) 
+		| std::ranges::views::transform([](std::string& a_str) { return Util::trim(a_str); }) 
+		| std::ranges::to<std::vector>();
+
+	const std::string text{ splits.size() == 2 ? splits[1] : splits[0] };
+	const std::string refStr{ splits.size() == 2 ? splits[0] : "" };
+
 	static srell::regex re{
 		R"((\w+)\s+((\w+)(\s+(\w+))?\s*)?(==|!=|>|>=|<|<=)\s*(\w+)(\s+(AND|OR))?)"
 	};
 
 	srell::cmatch m;
-	if (!srell::regex_match(a_text.data(), m, re)) {
+	if (!srell::regex_match(text.data(), m, re)) {
 		logger::error("Could not parse condition: {}"sv, a_text);
 		return nullptr;
 	}
@@ -89,6 +95,18 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 		if (connective == "OR"s) {
 			data.flags.isOR = true;
 		}
+	}
+
+	if (!refStr.empty()) {
+		if (const auto ref = LookupForm<RE::TESObjectREFR>(refStr, a_refs)) {
+			data.runOnRef = ref->CreateRefHandle();
+			data.object = RE::CONDITIONITEMOBJECT::kRef;
+			logger::info("adding run ref target {}", ref->GetFormID());
+		} else {
+			logger::info("failed to find ref");
+		}
+	} else {
+		logger::info("no ref str found");
 	}
 
 	auto conditionItem = new RE::TESConditionItem();

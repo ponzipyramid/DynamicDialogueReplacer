@@ -27,10 +27,15 @@ void ResponseManager::Init()
 
 			try {
 				const auto file = YAML::LoadFile(fileName);
+
+				ConditionParser::RefMap refMap;
+				refMap["PLAYER"] = RE::PlayerCharacter::GetSingleton();
+
 				auto replacements = file["topicInfos"].as<std::vector<Response>>();
 
 				for (auto& repl : replacements) {
-					if (repl.IsValid()) {
+					if (repl.IsValid() && repl.InitConditions(refMap)) {
+
 						_responses.emplace_back(repl);
 
 						for (const auto& hash : repl.GetHashes()) {
