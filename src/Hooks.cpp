@@ -24,13 +24,58 @@ void Hooks::Install()
 	} else {
 		logger::info("Failed to install hook on PopulateTopicInfo");
 	}
+	
+	const uintptr_t addr2 = REL::RelocationID(34429, 25541).address();
+
+	_GenTopic = (GenTopicType)addr2;
+	DetourTransactionBegin();
+	DetourUpdateThread(GetCurrentThread());
+	DetourAttach(&(PVOID&)_GenTopic, (PBYTE)&GenTopic);
+
+	if (DetourTransactionCommit() == NO_ERROR) {
+		logger::info("Installed hook on PopulateTopicInfo at {0:x} with replacement from address {0:x}", addr2, (void*)&GenTopic);
+	} else {
+		logger::info("Failed to install hook on PopulateTopicInfo");
+	}
+}
+
+int64_t Hooks::GenTopic(RE::TESTopic* a_1, int64_t a_2, int64_t a_3, RE::TESTopicInfo* a_4, RE::TESTopic* a_5, int64_t a_6)
+{
+	const auto menu = RE::MenuTopicManager::GetSingleton();
+
+	int before = 0;
+
+	if (menu->dialogueList) {
+		for (const auto& ptr : *(menu->dialogueList)) {
+			if (ptr) {
+				before++;
+			}
+		}
+	}
+	
+
+	int64_t res = _GenTopic(a_1, a_2, a_3, a_4, a_5, a_6);
+
+	int after = 0;
+
+	if (menu->dialogueList) {
+		for (const auto& ptr : *(menu->dialogueList)) {
+			if (ptr) {
+				after++;
+			}
+		}
+	}
+
+	logger::info("GenTopic - {} - {} - {}", a_1 ? a_1->GetName() : "none", before, after);
+	
+	return res;
 }
 
 int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5)
 {
 	_response = ResponseManager::FindReplacement(a_4, a_3, a_4->GetActorBase()->GetVoiceType(), a_5);
 
-	//logger::info("PopulateTopicInfo - {}", _response != nullptr);
+	logger::info("PopulateTopicInfo", a_2->GetName(), a_5->responseText);
 
 	return _PopulateTopicInfo(a_1, a_2, a_3, a_4, a_5);
 }
