@@ -33,8 +33,6 @@ namespace DDR
 		{
 			if (auto it = a_refs.find(a_text); it != a_refs.end()) {
 				return it->second->As<T>();
-			} else if (auto form = RE::TESForm::LookupByEditorID(a_text)) {
-				return form->As<T>();
 			}
 
 			return Util::GetFormFromString<T>(a_text);

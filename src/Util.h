@@ -54,6 +54,10 @@ namespace DDR::Util
 	template <typename T = RE::TESForm>
 	inline T* GetFormFromString(const std::string& s)
 	{
+		if (auto form = RE::TESForm::LookupByEditorID(s)) {
+			return form->As<T>();
+		}
+
 		const auto splits = Split(s, "|"sv);
 
 		if (splits.size() != 2) {

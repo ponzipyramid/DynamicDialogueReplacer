@@ -30,9 +30,7 @@ int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, 
 {
 	_response = ResponseManager::FindReplacement(a_4, a_3, a_4->GetActorBase()->GetVoiceType(), a_5);
 
-	if (a_3->GetFormID() == 546040) {
-		logger::info("PopulateTopicInfo - {} - {}", a_3->GetFormID(), _response != nullptr);
-	}
+	//logger::info("PopulateTopicInfo - {}", _response != nullptr);
 
 	return _PopulateTopicInfo(a_1, a_2, a_3, a_4, a_5);
 }
@@ -58,7 +56,7 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 		{
 			*a_filePath = NULL;
 			strcat_s(a_filePath, 0x104ui64, repl.c_str());
-			logger::info("ConstructResponse - {} - {}", filePath, a_filePath);
+			//logger::info("ConstructResponse - {} - {}", filePath, a_filePath);
 		}
 
 

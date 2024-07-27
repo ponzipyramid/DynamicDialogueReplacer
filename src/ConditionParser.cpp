@@ -101,12 +101,9 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 		if (const auto ref = LookupForm<RE::TESObjectREFR>(refStr, a_refs)) {
 			data.runOnRef = ref->CreateRefHandle();
 			data.object = RE::CONDITIONITEMOBJECT::kRef;
-			logger::info("adding run ref target {}", ref->GetFormID());
 		} else {
 			logger::info("failed to find ref");
 		}
-	} else {
-		logger::info("no ref str found");
 	}
 
 	auto conditionItem = new RE::TESConditionItem();

@@ -65,16 +65,12 @@ namespace DDR
 				}
 			}
 
-			logger::info("parsed {} conditions", numConditions);
-
 			_conditions = numConditions ? condition : nullptr;
 			_rawConditions.clear();
 
 			return true;
 		}
 		inline bool ConditionsMet(RE::Actor* a_speaker, RE::TESObjectREFR* a_target) {
-			logger::info("ConditionsMet: {}", _conditions && _conditions->IsTrue(a_speaker, a_target ? a_target : a_speaker));
-
 			return _conditions == nullptr || _conditions->IsTrue(a_speaker, a_target ? a_target : a_speaker);
 		}
 	private:

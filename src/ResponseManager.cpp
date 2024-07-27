@@ -31,6 +31,14 @@ void ResponseManager::Init()
 				ConditionParser::RefMap refMap;
 				refMap["PLAYER"] = RE::PlayerCharacter::GetSingleton();
 
+				const auto rawMap = file["refs"].as<std::unordered_map<std::string, std::string>>(std::unordered_map<std::string, std::string>{});
+
+				for (const auto& [key, value] : rawMap) {
+					if (const auto form = Util::GetFormFromString(value)) {
+						refMap[key] = form;
+					}
+				}
+
 				auto replacements = file["topicInfos"].as<std::vector<Response>>();
 
 				for (auto& repl : replacements) {
@@ -39,7 +47,6 @@ void ResponseManager::Init()
 						_responses.emplace_back(repl);
 
 						for (const auto& hash : repl.GetHashes()) {
-							logger::info("installing replacement at hash {}", hash);
 							_replacements[hash].emplace_back(&_responses[_responses.size() - 1]);
 						}
 					} else {
