@@ -67,6 +67,9 @@ void ResponseManager::Init()
 
 Response* ResponseManager::FindReplacement(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::BGSVoiceType* a_voiceType, RE::TESTopicInfo::ResponseData* a_responseData)
 {
+	if (!a_speaker || !a_topicInfo || !a_voiceType || !a_responseData)
+		return nullptr;
+
 	const auto key = Response::GenerateHash(a_topicInfo, a_voiceType, a_responseData->responseNumber);
 
 	if (_replacements.count(key)) {

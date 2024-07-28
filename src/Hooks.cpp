@@ -28,7 +28,11 @@ void Hooks::Install()
 
 int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5)
 {
-	_response = ResponseManager::FindReplacement(a_4, a_3, a_4->GetActorBase()->GetVoiceType(), a_5);
+	if (a_4 && a_4->GetActorBase()) {
+		_response = ResponseManager::FindReplacement(a_4, a_3, a_4->GetActorBase()->GetVoiceType(), a_5);
+	} else {
+		_response = nullptr;
+	}
 
 	//logger::info("PopulateTopicInfo - {}", _response != nullptr);
 
