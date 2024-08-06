@@ -1,6 +1,6 @@
-# CommonLibSSE-NG Plugin Template
+# Dynamic Dialogue Replacer
 
-Template for building SKSE plugins using the NG branch of CommonLibVR.  
+SKSE plugin that allows for runtime replacement of dialogue subtitles and voice files. 
 
 ## Requirements
 
@@ -33,7 +33,7 @@ Template for building SKSE plugins using the NG branch of CommonLibVR.
 Open terminal (e.g., PowerShell) and run the following commands:
 
 ```
-git clone https://github.com/ponzipyramid/CommonLibSSE-NG-Template.git --recursive
+git clone https://github.com/ponzipyramid/DynamicDialogueReplacer.git --recursive
 cd CommonLibSSE-NG-Template
 .\BuildRelease.bat
 ```
