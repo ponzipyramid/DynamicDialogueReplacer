@@ -14,6 +14,28 @@ namespace DDR
 
 		static auto Parse(std::string_view a_text, const RefMap& a_refs) -> RE::TESConditionItem*;
 
+		static inline std::shared_ptr<RE::TESCondition> ParseConditions(std::vector<std::string>& a_rawConditions, ConditionParser::RefMap& a_refs)
+		{
+			auto condition = std::make_shared<RE::TESCondition>();
+			RE::TESConditionItem** head = std::addressof(condition->head);
+			int numConditions = 0;
+
+			for (auto& text : a_rawConditions) {
+				if (text.empty())
+					continue;
+
+				if (auto conditionItem = ConditionParser::Parse(text, a_refs)) {
+					*head = conditionItem;
+					head = std::addressof(conditionItem->next);
+					numConditions += 1;
+				} else {
+					logger::info("Aborting condition parsing"sv);
+					return nullptr;
+				}
+			}
+
+			return numConditions ? condition : nullptr;
+		}
 	private:
 		union ConditionParam
 		{

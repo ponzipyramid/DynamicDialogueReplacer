@@ -45,27 +45,9 @@ namespace DDR
 
 			return Util::Join(sections, "\\"sv); 
 		}
-		inline bool InitConditions(ConditionParser::RefMap a_refs)
+		inline bool InitConditions(ConditionParser::RefMap& a_refs)
 		{
-			auto condition = std::make_shared<RE::TESCondition>();
-			RE::TESConditionItem** head = std::addressof(condition->head);
-			int numConditions = 0;
-
-			for (auto& text : _rawConditions) {
-				if (text.empty())
-					continue;
-
-				if (auto conditionItem = ConditionParser::Parse(text, a_refs)) {
-					*head = conditionItem;
-					head = std::addressof(conditionItem->next);
-					numConditions += 1;
-				} else {
-					logger::info("Aborting condition parsing"sv);
-					return false;
-				}
-			}
-
-			_conditions = numConditions ? condition : nullptr;
+			_conditions = ConditionParser::ParseConditions(_rawConditions, a_refs);
 			_rawConditions.clear();
 
 			return true;

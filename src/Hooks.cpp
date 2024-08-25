@@ -19,17 +19,19 @@ void Hooks::Install()
 	DetourUpdateThread(GetCurrentThread());
 	DetourAttach(&(PVOID&)_PopulateTopicInfo, (PBYTE)&PopulateTopicInfo);
 
-	if (DetourTransactionCommit() == NO_ERROR) {
-		logger::info("Installed hook on PopulateTopicInfo at {0:x} with replacement from address {0:x}", addr, (void*)&PopulateTopicInfo);
-	} else {
-		logger::info("Failed to install hook on PopulateTopicInfo");
+	if (DetourTransactionCommit() != NO_ERROR) {
+		logger::error("Failed to install hook on PopulateTopicInfo");
 	}
+
+	DialogueMenuEx::Install();
+
+	logger::info("installed hooks");
 }
 
 int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5)
 {
 	if (a_4 && a_4->GetActorBase()) {
-		_response = ResponseManager::FindReplacement(a_4, a_3, a_4->GetActorBase()->GetVoiceType(), a_5);
+		_response = DialogueManager::FindReplacementResponse(a_4, a_3, a_4->GetActorBase()->GetVoiceType(), a_5);
 	} else {
 		_response = nullptr;
 	}
@@ -63,9 +65,59 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 			//logger::info("ConstructResponse - {} - {}", filePath, a_filePath);
 		}
 
-
 		return true;
 	} else {
 		return false;
 	}
+}
+
+RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message)
+{
+	// clear cache when menu is closed
+	if (a_message.type == RE::UI_MESSAGE_TYPE::kHide || a_message.type == RE::UI_MESSAGE_TYPE::kForceHide) {
+		logger::info("resetting cache");
+		_cache.clear();
+	}
+
+	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {
+		
+		// find dialogue target on start
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
+			logger::info("initializing current speaker: {}", (bool)menu->speaker);
+			_currentTarget = nullptr;
+			if (const auto& targetHandle = menu->speaker) {
+				if (const auto& targetPtr = targetHandle.get()) {
+					_currentTarget = targetPtr.get();
+				}
+			}
+			logger::info("found dialogue target: {}", _currentTarget != nullptr);
+		}
+
+		if (const auto dialogue = menu->dialogueList) {
+			#pragma warning(suppress: 4834)
+			for (auto it = dialogue->begin(); it != dialogue->end(); it++) {
+				if (auto curr = *it) {
+					const auto id = curr->parentTopic->GetFormID();
+
+					Topic* replacement = nullptr;
+					const auto iter = _cache.find(id);
+					if (iter != _cache.end()) { // find in cache first
+						logger::info("{}: found in cache", id);
+						replacement = iter->second;
+					} else { // evaluate and place
+						logger::info("{}: not found in cache", id);
+						replacement = DialogueManager::FindReplacementTopic(id, _currentTarget);
+						_cache[id] = replacement;
+					}
+
+					if (replacement) {
+						logger::info("found replacement, replacing");
+						curr->topicText = replacement->GetText();
+					}
+				}
+			}
+		}
+	}
+
+	return _ProcessMessageFn(this, a_message);
 }

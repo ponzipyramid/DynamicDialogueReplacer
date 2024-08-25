@@ -1,5 +1,5 @@
 #include "Hooks.h"
-#include "ResponseManager.h"
+#include "DialogueManager.h"
 
 using namespace DDR;
 
@@ -30,7 +30,7 @@ void InitializeLog([[maybe_unused]] spdlog::level::level_enum a_level = spdlog::
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
 	if (message->type == SKSE::MessagingInterface::kDataLoaded) {
-		ResponseManager::Init();
+		DialogueManager::Init();
 	}
 }
 

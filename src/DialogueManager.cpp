@@ -1,8 +1,8 @@
-#include "ResponseManager.h"
+#include "DialogueManager.h"
 
 using namespace DDR;
 
-void ResponseManager::Init()
+void DialogueManager::Init()
 {
 	if (_init)
 		return;
@@ -39,22 +39,33 @@ void ResponseManager::Init()
 					}
 				}
 
-				auto replacements = file["topicInfos"].as<std::vector<Response>>();
+				auto respReplacements = file["topicInfos"].as<std::vector<Response>>(std::vector<Response>{});
 
-				for (auto& repl : replacements) {
+				for (auto& repl : respReplacements) {
 					if (repl.IsValid() && repl.InitConditions(refMap)) {
 
 						_responses.emplace_back(repl);
 
 						for (const auto& hash : repl.GetHashes()) {
-							_replacements[hash].emplace_back(&_responses[_responses.size() - 1]);
+							_respReplacements[hash].emplace_back(&_responses[_responses.size() - 1]);
 						}
 					} else {
 						logger::info("replacement not valid");
 					}
 				}
 
-				logger::info("loaded {} replacements from {}", replacements.size(), fileName);
+				auto topicReplacements = file["topics"].as<std::vector<Topic>>(std::vector<Topic>{});
+
+				for (auto& repl : topicReplacements) {
+					if (repl.IsValid() && repl.InitConditions(refMap)) {
+						_topics.emplace_back(repl);
+						_topicReplacements[repl.GetId()].emplace_back(&_topics[_topics.size() - 1]);
+					} else {
+						logger::info("replacement not valid");
+					}
+				}
+
+				logger::info("loaded {} response replacements and {} topic replacements from {}", respReplacements.size(), topicReplacements.size(), fileName);
 
 			} catch (std::exception& e) {
 				logger::info("failed to load {} - {}", fileName, e.what());
@@ -65,15 +76,15 @@ void ResponseManager::Init()
 	}
 }
 
-Response* ResponseManager::FindReplacement(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::BGSVoiceType* a_voiceType, RE::TESTopicInfo::ResponseData* a_responseData)
+Response* DialogueManager::FindReplacementResponse(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::BGSVoiceType* a_voiceType, RE::TESTopicInfo::ResponseData* a_responseData)
 {
 	if (!a_speaker || !a_topicInfo || !a_voiceType || !a_responseData)
 		return nullptr;
 
 	const auto key = Response::GenerateHash(a_topicInfo, a_voiceType, a_responseData->responseNumber);
 
-	if (_replacements.count(key)) {
-		const auto& replacements = _replacements[key];
+	if (_respReplacements.count(key)) {
+		const auto& replacements = _respReplacements[key];
 		for (const auto& repl : replacements) {
 			RE::TESObjectREFR* target = nullptr;
 
@@ -85,6 +96,22 @@ Response* ResponseManager::FindReplacement(RE::Character* a_speaker, RE::TESTopi
 
 			if (repl->ConditionsMet(a_speaker, target))
 				return repl;
+		}
+	}
+
+	return nullptr;
+}
+
+Topic* DialogueManager::FindReplacementTopic(RE::FormID a_id, RE::TESObjectREFR* a_target)
+{
+	if (_topicReplacements.count(a_id)) {
+		const auto& replacements = _topicReplacements[a_id];
+
+		for (const auto& repl : replacements) {
+			if (repl->ConditionsMet(RE::PlayerCharacter::GetSingleton(), a_target)) {
+				return repl;
+			}
+				
 		}
 	}
 

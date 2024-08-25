@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_set>
-#include "ResponseManager.h"
+#include "DialogueManager.h"
 
 using namespace RE;
 namespace DDR
@@ -23,5 +23,25 @@ namespace DDR
 		static inline REL::Relocation<decltype(ConstructResponse)> _ConstructResponse;
 		
 		thread_local static inline Response* _response = nullptr;
+	};
+
+	class DialogueMenuEx : public RE::DialogueMenu
+	{
+	public:
+		static inline void Install()
+		{
+			REL::Relocation<uintptr_t> vtbl(RE::VTABLE_DialogueMenu[0]);
+			_ProcessMessageFn = vtbl.write_vfunc(0x4, &ProcessMessageEx);
+		}
+
+	public:
+		RE::UI_MESSAGE_RESULTS ProcessMessageEx(RE::UIMessage& a_message);
+
+	private:
+		using ProcessMessageFn = decltype(&RE::DialogueMenu::ProcessMessage);
+		static inline REL::Relocation<ProcessMessageFn> _ProcessMessageFn;
+
+		static inline RE::TESObjectREFR* _currentTarget;
+		static inline std::unordered_map<RE::FormID, Topic*> _cache;
 	};
 }
