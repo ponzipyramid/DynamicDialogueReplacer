@@ -73,17 +73,15 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 
 RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message)
 {
-	// clear cache when menu is closed
-	if (a_message.type == RE::UI_MESSAGE_TYPE::kHide || a_message.type == RE::UI_MESSAGE_TYPE::kForceHide) {
-		logger::info("resetting cache");
+	if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
 		_cache.clear();
 	}
 
 	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {
-		
 		// find dialogue target on start
 		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
 			logger::info("initializing current speaker: {}", (bool)menu->speaker);
+
 			_currentTarget = nullptr;
 			if (const auto& targetHandle = menu->speaker) {
 				if (const auto& targetPtr = targetHandle.get()) {
@@ -102,10 +100,8 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 					Topic* replacement = nullptr;
 					const auto iter = _cache.find(id);
 					if (iter != _cache.end()) { // find in cache first
-						logger::info("{}: found in cache", id);
 						replacement = iter->second;
 					} else { // evaluate and place
-						logger::info("{}: not found in cache", id);
 						replacement = DialogueManager::FindReplacementTopic(id, _currentTarget);
 						_cache[id] = replacement;
 					}
