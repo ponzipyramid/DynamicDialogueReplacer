@@ -41,6 +41,7 @@ namespace DDR
 		using ProcessMessageFn = decltype(&RE::DialogueMenu::ProcessMessage);
 		static inline REL::Relocation<ProcessMessageFn> _ProcessMessageFn;
 
+		static inline int64_t _currId;
 		static inline RE::TESObjectREFR* _currentTarget;
 		static inline std::unordered_map<RE::FormID, Topic*> _cache;
 	};

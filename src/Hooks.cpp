@@ -73,11 +73,7 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 
 RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message)
 {
-	if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
-		_cache.clear();
-	}
-
-	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {
+	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {		
 		// find dialogue target on start
 		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
 			logger::info("initializing current speaker: {}", (bool)menu->speaker);
@@ -89,6 +85,16 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 				}
 			}
 			logger::info("found dialogue target: {}", _currentTarget != nullptr);
+
+			_currId = -1;
+		}
+
+		const auto rootId = menu->rootTopicInfo ? menu->rootTopicInfo->GetFormID() : 0;
+
+		if (_currId == -1 || _currId != rootId) {
+			logger::info("clearing cache");
+			_cache.clear();
+			_currId = rootId;
 		}
 
 		if (const auto dialogue = menu->dialogueList) {
