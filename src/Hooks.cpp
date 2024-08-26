@@ -2,26 +2,10 @@
 
 using namespace DDR;
 
-namespace RE
-{
-	class MenuTopicManagerEx : MenuTopicManager
-	{
-	public:
-		int64_t AddTopic(RE::TESTopic* a_topic, int64_t a_3, int64_t a_4);
-	};
-
-	int64_t MenuTopicManagerEx::AddTopic(RE::TESTopic* a_topic, int64_t a_3, int64_t a_4)
-	{
-		using func_t = decltype(&MenuTopicManagerEx::AddTopic);
-		REL::Relocation<func_t> func{ REL::ID(35303) }; // TODO: find se address
-		return func(this, a_topic, a_3, a_4);
-	}
-}
-
 void Hooks::Install() 
 {
 	auto& trampoline = SKSE::GetTrampoline();
-	SKSE::AllocTrampoline(32);
+	SKSE::AllocTrampoline(64);
 
 	REL::Relocation<std::uintptr_t> target{ REL::RelocationID(34429, 35249) };
 	
@@ -40,6 +24,11 @@ void Hooks::Install()
 	}
 
 	DialogueMenuEx::Install();
+
+	// TODO: find corresponding SE address
+	if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
+		_AddTopic = trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::ID(35287), REL::Offset(0x154) }.address(), AddTopic);
+	}
 
 	logger::info("installed hooks");
 }
@@ -85,6 +74,15 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 	} else {
 		return false;
 	}
+}
+
+int64_t Hooks::AddTopic(RE::MenuTopicManager* a1, RE::TESTopic* a2, int64_t a3, int64_t a4)
+{
+	logger::info("AddTopic: {}", a2->GetFormEditorID());
+	if (a1->rootTopicInfo && _currTopicInfoId != a1->rootTopicInfo->GetFormID()) {
+		logger::info("patching in new topic");
+	}
+	return _AddTopic(a1, a2, a3, a4);
 }
 
 RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message)
