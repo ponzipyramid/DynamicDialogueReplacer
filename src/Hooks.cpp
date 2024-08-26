@@ -2,6 +2,17 @@
 
 using namespace DDR;
 
+namespace RE
+{
+	int64_t AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4)
+	{
+		// add SE address
+		using func_t = decltype(&RE::AddTopic);
+		REL::Relocation<func_t> func{ REL::ID(35303) };
+		return func(a_this, a_topic, a_3, a_4);
+	}
+}
+
 void Hooks::Install() 
 {
 	auto& trampoline = SKSE::GetTrampoline();
@@ -24,11 +35,6 @@ void Hooks::Install()
 	}
 
 	DialogueMenuEx::Install();
-
-	// TODO: find corresponding SE address
-	if (REL::Module::GetRuntime() == REL::Module::Runtime::AE) {
-		_AddTopic = trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::ID(35287), REL::Offset(0x154) }.address(), AddTopic);
-	}
 
 	logger::info("installed hooks");
 }
@@ -76,15 +82,6 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 	}
 }
 
-int64_t Hooks::AddTopic(RE::MenuTopicManager* a1, RE::TESTopic* a2, int64_t a3, int64_t a4)
-{
-	logger::info("AddTopic: {}", a2->GetFormEditorID());
-	if (a1->rootTopicInfo && _currTopicInfoId != a1->rootTopicInfo->GetFormID()) {
-		logger::info("patching in new topic");
-	}
-	return _AddTopic(a1, a2, a3, a4);
-}
-
 RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message)
 {
 	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {		
@@ -111,11 +108,17 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 			_currId = rootId;
 		}
 
+		const auto patchForm = RE::TESForm::LookupByEditorID<RE::TESTopic>("DDR_BranchTopicDisconnected");
+		bool sawPatch = false;
 		if (const auto dialogue = menu->dialogueList) {
 			#pragma warning(suppress: 4834)
 			for (auto it = dialogue->begin(); it != dialogue->end(); it++) {
 				if (auto curr = *it) {
 					const auto id = curr->parentTopic->GetFormID();
+
+					if (id == patchForm->GetFormID()) {
+						sawPatch = true;
+					}
 
 					Topic* replacement = nullptr;
 					const auto iter = _cache.find(id);
@@ -133,6 +136,10 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 				}
 			}
 		}
+
+		if (!sawPatch)
+			RE::AddTopic(menu, patchForm, 0, 0);
+
 	}
 
 	return _ProcessMessageFn(this, a_message);
