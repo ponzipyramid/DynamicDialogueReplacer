@@ -104,13 +104,14 @@ std::shared_ptr<Response> DialogueManager::FindReplacementResponse(RE::Character
 		return nullptr;
 	}
 
-	auto key = Response::GenerateHash(a_topicInfo->GetFormID(), voiceType, a_responseData->responseNumber);
+	const auto key = Response::GenerateHash(a_topicInfo->GetFormID(), voiceType, a_responseData->responseNumber);
+	const auto allKey = Response::GenerateHash(a_topicInfo->GetFormID(), a_responseData->responseNumber);
+	
 
+	// try stored overrides next
 	auto iter = _respReplacements.find(key);
 	if (iter == _respReplacements.end()) {
-		// try universal instead
-		key = Response::GenerateHash(a_topicInfo->GetFormID(), a_responseData->responseNumber);
-		iter = _respReplacements.find(key);
+		iter = _respReplacements.find(allKey);
 	}
 
 	if (iter != _respReplacements.end()) {
@@ -127,6 +128,13 @@ std::shared_ptr<Response> DialogueManager::FindReplacementResponse(RE::Character
 
 std::shared_ptr<Topic> DialogueManager::FindReplacementTopic(RE::FormID a_id, RE::TESObjectREFR* a_target)
 {
+	if (_tempTopicMutex.try_lock()) {
+		if (_tempTopicReplacements.count(a_id)) {
+			return _tempTopicReplacements[a_id];
+		}
+		_tempTopicMutex.unlock();
+	}
+
 	if (_topicReplacements.count(a_id)) {
 		const auto& replacements = _topicReplacements[a_id];
 
@@ -138,4 +146,32 @@ std::shared_ptr<Topic> DialogueManager::FindReplacementTopic(RE::FormID a_id, RE
 	}
 
 	return nullptr;
+}
+
+std::string DialogueManager::AddReplacementTopic(RE::FormID a_topicId, std::string a_text)
+{
+	std::unique_lock lock{ _tempTopicMutex };
+
+	std::string key{ Util::GenerateUUID() };
+
+	if (_tempTopicKeys.count(a_topicId)) {
+		logger::info("overwrite detected on {} - previous key = {}", a_topicId, _tempTopicKeys.count(a_topicId));
+	}
+
+	_tempTopicKeys[a_topicId] = key;
+	_tempTopicReplacements[a_topicId] = std::make_shared<Topic>(a_topicId, a_text);
+
+	return key;
+}
+
+void DialogueManager::RemoveReplacementTopic(RE::FormID a_topicId, std::string a_key)
+{
+	std::unique_lock lock{ _tempTopicMutex };
+
+	if (_tempTopicKeys.count(a_topicId) && _tempTopicKeys[a_topicId] != a_key) {
+		return;
+	}
+
+	_tempTopicKeys.erase(a_topicId);
+	_tempTopicReplacements.erase(a_topicId);
 }

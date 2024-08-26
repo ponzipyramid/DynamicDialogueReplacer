@@ -1,5 +1,6 @@
 #include "Hooks.h"
 #include "DialogueManager.h"
+#include "Papyrus.h"
 
 using namespace DDR;
 
@@ -42,6 +43,9 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	if (const auto messaging{ SKSE::GetMessagingInterface() }; !messaging->RegisterListener(Listener))
 		return false;
+
+	const auto papyrus = SKSE::GetPapyrusInterface();
+	papyrus->Register(Papyrus::RegisterFunctions);
 	
 	Hooks::Install();
 

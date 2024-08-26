@@ -102,7 +102,7 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 			data.runOnRef = ref->CreateRefHandle();
 			data.object = RE::CONDITIONITEMOBJECT::kRef;
 		} else {
-			logger::info("failed to find ref");
+			logger::info("failed to find ref {}", refStr);
 		}
 	}
 

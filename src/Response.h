@@ -8,6 +8,17 @@ namespace DDR
 	class Response
 	{
 	public:
+		Response() = default;
+		inline Response(RE::FormID a_id, int index, std::string a_sub, std::string a_path, std::vector<RE::BGSVoiceType*> a_voices)
+		{
+			_topicInfoId = a_id;
+			_index = index;
+			_subtitle = a_sub;
+			_path = a_path;
+			_voiceTypes = a_voices;
+			_valid = true;
+		}
+
 		static inline std::string GenerateHash(RE::FormID a_topicInfoId, RE::BGSVoiceType* a_voiceType, int index)
 		{
 			if (!a_voiceType || index < 1)
@@ -23,7 +34,7 @@ namespace DDR
 			return std::format("{}|all|{}", a_topicInfoId, index);
 		}
 		inline bool IsValid() { return _valid; }
-		inline std::vector<std::string> GetHashes() {
+		inline std::vector<std::string> GetHashes() const {
 			return _voiceTypes.empty() ? std::vector<std::string>{ GenerateHash(_topicInfoId, _index) } :
 				_voiceTypes
 				| std::ranges::views::transform([this](RE::BGSVoiceType* a_voiceType) { 
@@ -55,8 +66,6 @@ namespace DDR
 		}
 		inline bool Init(ConditionParser::RefMap& a_refs)
 		{
-			logger::info("Response: {}", _voiceTypes.size());
-
 			_conditions = ConditionParser::ParseConditions(_rawConditions, a_refs);
 			_rawConditions.clear();
 
@@ -73,7 +82,7 @@ namespace DDR
 		std::vector<RE::BGSVoiceType*> _voiceTypes;
 		RE::FormID _topicInfoId;
 		
-		int _index; 
+		int _index;
 		
 		std::vector<std::string> _rawConditions;
 		std::shared_ptr<RE::TESCondition> _conditions = nullptr;

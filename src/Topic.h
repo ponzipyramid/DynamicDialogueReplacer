@@ -8,6 +8,13 @@ namespace DDR
 	class Topic
 	{
 	public:
+		Topic() = default;
+		inline Topic(RE::FormID a_id, std::string a_text)
+		{
+			_id = a_id;
+			_text = a_text;
+			_valid = true;
+		}
 		inline RE::FormID GetId() { return _id; }
 		inline bool IsValid() { return _valid; }
 		inline bool InitConditions(ConditionParser::RefMap a_refs)
