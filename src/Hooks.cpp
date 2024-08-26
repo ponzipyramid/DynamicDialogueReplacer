@@ -41,13 +41,9 @@ void Hooks::Install()
 
 int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5)
 {
-	if (a_4 && a_4->GetActorBase()) {
-		_response = DialogueManager::FindReplacementResponse(a_4, a_3, a_4->GetActorBase()->GetVoiceType(), a_5);
-	} else {
-		_response = nullptr;
-	}
+	_response = DialogueManager::FindReplacementResponse(a_4, a_3, a_5);
 
-	//logger::info("PopulateTopicInfo - {}", _response != nullptr);
+	//logger::info("PopulateTopicInfo - {} - {}", a_2->GetName(), _response != nullptr);
 
 	return _PopulateTopicInfo(a_1, a_2, a_3, a_4, a_5);
 }
@@ -67,27 +63,23 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 	if (_ConstructResponse(a_response, a_filePath, a_voiceType, a_topic, a_topicInfo)) {
 		std::string filePath{ a_filePath };
 		
-		const std::string repl{ _response ? _response->GetPath(a_topic, a_topicInfo, a_voiceType) : "" };
-
-		if (!repl.empty())
+		if (_response)
 		{
 			*a_filePath = NULL;
-			strcat_s(a_filePath, 0x104ui64, repl.c_str());
-			//logger::info("ConstructResponse - {} - {}", filePath, a_filePath);
+			strcat_s(a_filePath, 0x104ui64, _response->GetPath(a_topic, a_topicInfo, a_voiceType).c_str());
 		}
 
 		return true;
-	} else {
-		return false;
 	}
-}
+
+	return false;
+} 
 
 RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message)
 {
 	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {		
 		// find dialogue target on start
 		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
-			logger::info("initializing current speaker: {}", (bool)menu->speaker);
 
 			_currentTarget = nullptr;
 			if (const auto& targetHandle = menu->speaker) {
@@ -95,7 +87,6 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 					_currentTarget = targetPtr.get();
 				}
 			}
-			logger::info("found dialogue target: {}", _currentTarget != nullptr);
 
 			_currId = -1;
 		}
@@ -103,7 +94,6 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 		const auto rootId = menu->rootTopicInfo ? menu->rootTopicInfo->GetFormID() : 0;
 
 		if (_currId == -1 || _currId != rootId) {
-			logger::info("clearing cache");
 			_cache.clear();
 			_currId = rootId;
 		}
@@ -114,7 +104,7 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 				if (auto curr = *it) {
 					const auto id = curr->parentTopic->GetFormID();
 
-					Topic* replacement = nullptr;
+					std::shared_ptr<Topic> replacement = nullptr;
 					const auto iter = _cache.find(id);
 					if (iter != _cache.end()) { // find in cache first
 						replacement = iter->second;
@@ -124,7 +114,6 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 					}
 
 					if (replacement) {
-						logger::info("found replacement, replacing");
 						curr->topicText = replacement->GetText();
 					}
 				}
@@ -134,4 +123,3 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 
 	return _ProcessMessageFn(this, a_message);
 }
-

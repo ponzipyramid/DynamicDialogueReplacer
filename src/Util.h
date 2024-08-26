@@ -51,6 +51,26 @@ namespace DDR::Util
 		return ltrim(rtrim(s, t), t);
 	}
 
+	inline std::optional<std::pair<RE::FormID, std::string>> ParseFormId(std::string a_str)
+	{
+		const auto splits = Split(a_str, "|"sv);
+
+		if (splits.size() != 2) {
+			return std::nullopt;
+		}
+
+		char* p;
+		const auto formId = std::strtol(splits[0].c_str(), &p, 16);
+
+		if (*p != 0) {
+			return std::nullopt;
+		}
+
+		const auto espName = std::regex_replace(splits[1], std::regex("^ +| +$|( ) +"), "$1");
+
+		return std::make_pair(formId, espName);
+	}
+
 	template <typename T = RE::TESForm>
 	inline T* GetFormFromString(const std::string& s)
 	{
@@ -58,19 +78,11 @@ namespace DDR::Util
 			return form->As<T>();
 		}
 
-		const auto splits = Split(s, "|"sv);
-
-		if (splits.size() != 2) {
+		if (const auto parsed = ParseFormId(s)) {
+			const auto [formId, espName] = parsed.value();
+			return RE::TESDataHandler::GetSingleton()->LookupForm<T>(formId, espName);
+		} else {
 			return nullptr;
 		}
-
-		char* p;
-		const auto formId = std::strtol(splits[0].c_str(), &p, 16);
-
-		if (*p != 0) {
-			return nullptr;
-		}
-
-		return RE::TESDataHandler::GetSingleton()->LookupForm<T>(formId, splits[1]);
 	}
 }

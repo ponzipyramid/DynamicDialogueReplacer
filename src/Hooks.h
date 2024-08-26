@@ -29,7 +29,7 @@ namespace DDR
 		static inline REL::Relocation<decltype(ConstructResponse)> _ConstructResponse;
 
 		
-		thread_local static inline Response* _response = nullptr;
+		thread_local static inline std::shared_ptr<Response> _response = nullptr;
 		static inline RE::FormID _currTopicInfoId;
 	};
 
@@ -53,7 +53,7 @@ namespace DDR
 
 		static inline int64_t _currId;
 		static inline RE::TESObjectREFR* _currentTarget;
-		static inline std::unordered_map<RE::FormID, Topic*> _cache;
+		static inline std::unordered_map<RE::FormID, std::shared_ptr<Topic>> _cache;
 		static inline bool _inject = true;
 	};
 }
