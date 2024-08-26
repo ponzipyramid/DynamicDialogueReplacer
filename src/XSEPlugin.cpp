@@ -24,7 +24,7 @@ void InitializeLog([[maybe_unused]] spdlog::level::level_enum a_level = spdlog::
 	log->flush_on(spdlog::level::info);
 
 	spdlog::set_default_logger(std::move(log));
-	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] [%t] [%s:%#] %v");
+	spdlog::set_pattern("%v");
 }
 
 void Listener(SKSE::MessagingInterface::Message* message) noexcept

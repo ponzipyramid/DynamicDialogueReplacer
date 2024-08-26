@@ -6,43 +6,21 @@
 using namespace RE;
 namespace DDR
 {
-	typedef int64_t(WINAPI* PopulateTopicInfoType)(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5);
+	typedef int64_t(WINAPI* SetupTopicType)(int64_t a1, int64_t a2, TESTopic* a3, int64_t a4, int64_t a5, char a6);
 
 	class Hooks
 	{
 	public:
 		static void Install();
-	private:
-		static int64_t PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5);
-		static inline PopulateTopicInfoType _PopulateTopicInfo;
-		
-		static char* SetSubtitle(DialogueResponse* a_response, char* text, int32_t unk);
-		static inline REL::Relocation<decltype(SetSubtitle)> _SetSubtitle;
+	private:				
+		static int64_t PopulateTopicInfo1(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5);
+		static int64_t PopulateTopicInfo2(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5);
+		static int64_t PopulateTopicInfo3(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5);
 
-		static bool ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_filePath, BGSVoiceType* a_voiceType, TESTopic* a_topic, TESTopicInfo* a_topicInfo);
-		static inline REL::Relocation<decltype(ConstructResponse)> _ConstructResponse;
-		
-		thread_local static inline Response* _response = nullptr;
-	};
+		static inline REL::Relocation<decltype(PopulateTopicInfo1)> _PopulateTopicInfo;
 
-	class DialogueMenuEx : public RE::DialogueMenu
-	{
-	public:
-		static inline void Install()
-		{
-			REL::Relocation<uintptr_t> vtbl(RE::VTABLE_DialogueMenu[0]);
-			_ProcessMessageFn = vtbl.write_vfunc(0x4, &ProcessMessageEx);
-		}
 
-	public:
-		RE::UI_MESSAGE_RESULTS ProcessMessageEx(RE::UIMessage& a_message);
-
-	private:
-		using ProcessMessageFn = decltype(&RE::DialogueMenu::ProcessMessage);
-		static inline REL::Relocation<ProcessMessageFn> _ProcessMessageFn;
-
-		static inline int64_t _currId;
-		static inline RE::TESObjectREFR* _currentTarget;
-		static inline std::unordered_map<RE::FormID, Topic*> _cache;
+		static int64_t SetupTopic(int64_t a1, int64_t a2, TESTopic* a3, int64_t a4, int64_t a5, char a6);
+		static inline SetupTopicType _SetupTopic;
 	};
 }
