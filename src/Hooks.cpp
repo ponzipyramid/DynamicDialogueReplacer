@@ -2,6 +2,22 @@
 
 using namespace DDR;
 
+namespace RE
+{
+	class MenuTopicManagerEx : MenuTopicManager
+	{
+	public:
+		int64_t AddTopic(RE::TESTopic* a_topic, int64_t a_3, int64_t a_4);
+	};
+
+	int64_t MenuTopicManagerEx::AddTopic(RE::TESTopic* a_topic, int64_t a_3, int64_t a_4)
+	{
+		using func_t = decltype(&MenuTopicManagerEx::AddTopic);
+		REL::Relocation<func_t> func{ REL::ID(35303) }; // TODO: find se address
+		return func(this, a_topic, a_3, a_4);
+	}
+}
+
 void Hooks::Install() 
 {
 	auto& trampoline = SKSE::GetTrampoline();
@@ -123,3 +139,4 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 
 	return _ProcessMessageFn(this, a_message);
 }
+
