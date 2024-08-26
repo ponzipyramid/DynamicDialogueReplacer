@@ -108,17 +108,11 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 			_currId = rootId;
 		}
 
-		const auto patchForm = RE::TESForm::LookupByEditorID<RE::TESTopic>("DDR_BranchTopicDisconnected");
-		bool sawPatch = false;
 		if (const auto dialogue = menu->dialogueList) {
 			#pragma warning(suppress: 4834)
 			for (auto it = dialogue->begin(); it != dialogue->end(); it++) {
 				if (auto curr = *it) {
 					const auto id = curr->parentTopic->GetFormID();
-
-					if (id == patchForm->GetFormID()) {
-						sawPatch = true;
-					}
 
 					Topic* replacement = nullptr;
 					const auto iter = _cache.find(id);
@@ -136,10 +130,6 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 				}
 			}
 		}
-
-		if (!sawPatch)
-			RE::AddTopic(menu, patchForm, 0, 0);
-
 	}
 
 	return _ProcessMessageFn(this, a_message);
