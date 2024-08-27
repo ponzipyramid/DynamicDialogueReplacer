@@ -105,4 +105,15 @@ namespace DDR::Util
 		}
 		return res;
 	}
+
+	inline std::string FormIDToString(RE::FormID a_id)
+	{
+		std::stringstream stream;
+		stream << std::hex << a_id;
+		std::string str(stream.str());
+
+		std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return (char)std::toupper(c); });
+
+		return "0x" + str;
+	}
 }

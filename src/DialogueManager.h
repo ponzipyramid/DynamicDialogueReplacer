@@ -10,7 +10,7 @@ namespace DDR
 	public:
 		static void Init();
 		static std::shared_ptr<Response> FindReplacementResponse(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_responseData);
-		static std::shared_ptr<Topic> FindReplacementTopic(RE::FormID a_id, RE::TESObjectREFR* a_target);
+		static std::shared_ptr<Topic> FindReplacementTopic(RE::FormID a_id, RE::TESObjectREFR* a_target, bool a_full);
 
 		static std::string AddReplacementTopic(RE::FormID a_topicId, std::string a_text);
 		static void RemoveReplacementTopic(RE::FormID a_topicId, std::string a_key);

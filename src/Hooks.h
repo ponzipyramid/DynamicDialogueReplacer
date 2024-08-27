@@ -28,7 +28,9 @@ namespace DDR
 		static bool ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_filePath, BGSVoiceType* a_voiceType, TESTopic* a_topic, TESTopicInfo* a_topicInfo);
 		static inline REL::Relocation<decltype(ConstructResponse)> _ConstructResponse;
 
-		
+		static inline RE::TESTopicInfo::ResponseData* AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4);
+		static inline REL::Relocation<decltype(AddTopic)> _AddTopic;
+
 		thread_local static inline std::shared_ptr<Response> _response = nullptr;
 		static inline RE::FormID _currTopicInfoId;
 	};
@@ -44,9 +46,10 @@ namespace DDR
 			_inject = REL::Module::GetRuntime() == REL::Module::Runtime::AE;
 		}
 
-	public:
-		RE::UI_MESSAGE_RESULTS ProcessMessageEx(RE::UIMessage& a_message);
+		static inline RE::TESObjectREFR* GetTarget() { return _currentTarget; }
 
+		RE::UI_MESSAGE_RESULTS ProcessMessageEx(RE::UIMessage& a_message);
+		
 	private:
 		using ProcessMessageFn = decltype(&RE::DialogueMenu::ProcessMessage);
 		static inline REL::Relocation<ProcessMessageFn> _ProcessMessageFn;

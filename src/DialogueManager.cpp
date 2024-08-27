@@ -126,7 +126,7 @@ std::shared_ptr<Response> DialogueManager::FindReplacementResponse(RE::Character
 	return nullptr;
 }
 
-std::shared_ptr<Topic> DialogueManager::FindReplacementTopic(RE::FormID a_id, RE::TESObjectREFR* a_target)
+std::shared_ptr<Topic> DialogueManager::FindReplacementTopic(RE::FormID a_id, RE::TESObjectREFR* a_target, bool a_full)
 {
 	if (_tempTopicMutex.try_lock()) {
 		if (_tempTopicReplacements.count(a_id)) {
@@ -139,7 +139,7 @@ std::shared_ptr<Topic> DialogueManager::FindReplacementTopic(RE::FormID a_id, RE
 		const auto& replacements = _topicReplacements[a_id];
 
 		for (const auto& repl : replacements) {
-			if (repl->ConditionsMet(RE::PlayerCharacter::GetSingleton(), a_target)) {
+			if (repl->IsFull() == a_full && repl->ConditionsMet(RE::PlayerCharacter::GetSingleton(), a_target)) {
 				return repl;
 			}
 		}

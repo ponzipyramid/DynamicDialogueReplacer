@@ -31,9 +31,12 @@ namespace DDR
 		inline const char* GetText() {
 			return _text.c_str();
 		}
+		inline bool IsFull() { return _topic != nullptr; }
+		inline RE::TESTopic* GetTopic() { return _topic; }
 	private:
 		RE::FormID _id = 0;
 		std::string _text;
+		RE::TESTopic* _topic;
 
 		std::vector<std::string> _rawConditions;
 		std::shared_ptr<RE::TESCondition> _conditions = nullptr;
@@ -69,8 +72,11 @@ namespace YAML
 
 			rhs._text = node["text"].as<std::string>("");
 
-			if (rhs._text.empty()) {
-				logger::error("replacement text must not be empty");
+			const auto with = node["with"].as<std::string>("");
+			rhs._topic = Util::GetFormFromString<RE::TESTopic>(with);
+
+			if (rhs._text.empty() && !rhs._topic) {
+				logger::error("replacement must have text or a topic {} {}", rhs._text, with);
 				return true;
 			}
 

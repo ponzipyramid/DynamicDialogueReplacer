@@ -34,6 +34,10 @@ void Hooks::Install()
 		logger::error("Failed to install hook on PopulateTopicInfo");
 	}
 
+	_AddTopic = trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::ID{ 35287 }, REL::Offset{ 0x154 } }.address(), AddTopic);
+	trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::ID{ 35304 }, REL::Offset{ 0x6C } }.address(), AddTopic);
+
+
 	DialogueMenuEx::Install();
 
 	logger::info("installed hooks");
@@ -75,6 +79,19 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 	return false;
 } 
 
+RE::TESTopicInfo::ResponseData* Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4)
+{	
+
+	if (!a_topic)
+		return _AddTopic(a_this, a_topic, a_3, a_4);
+
+	if (const auto& res = DialogueManager::FindReplacementTopic(a_topic->GetFormID(), DialogueMenuEx::GetTarget(), true)) {
+		return _AddTopic(a_this, res->GetTopic(), a_3, a_4);
+	}
+
+	return _AddTopic(a_this, a_topic, a_3, a_4);
+}
+
 RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message)
 {
 	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {		
@@ -109,7 +126,7 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 					if (iter != _cache.end()) { // find in cache first
 						replacement = iter->second;
 					} else { // evaluate and place
-						replacement = DialogueManager::FindReplacementTopic(id, _currentTarget);
+						replacement = DialogueManager::FindReplacementTopic(id, _currentTarget, false);
 						_cache[id] = replacement;
 					}
 
