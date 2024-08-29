@@ -34,9 +34,8 @@ void Hooks::Install()
 		logger::error("Failed to install hook on PopulateTopicInfo");
 	}
 
-	_AddTopic = trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::ID{ 35287 }, REL::Offset{ 0x154 } }.address(), AddTopic);
-	trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::ID{ 35304 }, REL::Offset{ 0x6C } }.address(), AddTopic);
-
+	_AddTopic = trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::RelocationID{ 34460, 35287 } }.address() + REL::Relocate(0xFA, 0x154), AddTopic);
+	trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::RelocationID{ 34477, 35304 } }.address() + REL::Relocate(0x79, 0x6C), AddTopic);
 
 	DialogueMenuEx::Install();
 
@@ -80,13 +79,16 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 } 
 
 RE::TESTopicInfo::ResponseData* Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4)
-{	
-
+{
 	if (!a_topic)
 		return _AddTopic(a_this, a_topic, a_3, a_4);
 
-	if (const auto& res = DialogueManager::FindReplacementTopic(a_topic->GetFormID(), DialogueMenuEx::GetTarget(), true)) {
-		return _AddTopic(a_this, res->GetTopic(), a_3, a_4);
+	if (const auto& resp = DialogueManager::FindReplacementTopic(a_topic->GetFormID(), DialogueMenuEx::GetTarget(), true)) {
+		//logger::info("testing replacement {} with {}", a_topic->GetFormEditorID(), resp->GetTopic()->GetFormEditorID());
+
+		if (const auto& res = _AddTopic(a_this, resp->GetTopic(), a_3, a_4)) {
+			return res;
+		}
 	}
 
 	return _AddTopic(a_this, a_topic, a_3, a_4);
