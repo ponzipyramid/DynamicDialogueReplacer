@@ -31,17 +31,25 @@ namespace DDR
 		inline const char* GetText() {
 			return _text.c_str();
 		}
-		inline bool IsFull() { return _topic != nullptr; }
-		inline RE::TESTopic* GetTopic() { return _topic; }
+		inline bool IsHidden() { return _hide; }
+		inline bool IsFull() { return _with != nullptr || _hide || !_inject.empty(); }
+		inline bool ShouldProceed() { return _proceed; }
+		inline RE::TESTopic* GetTopic() { return _with; }
+		inline std::vector<RE::TESTopic*> GetInjections() { return _inject; }
+
 	private:
 		RE::FormID _id = 0;
 		std::string _text;
-		RE::TESTopic* _topic;
+		RE::TESTopic* _with;
+
+		std::vector<RE::TESTopic*> _inject;
 
 		std::vector<std::string> _rawConditions;
 		std::shared_ptr<RE::TESCondition> _conditions = nullptr;
 
 		bool _valid = false;
+		bool _hide = false;
+		bool _proceed = false;
 
 		friend struct YAML::convert<Topic>;
 	};
@@ -73,9 +81,19 @@ namespace YAML
 			rhs._text = node["text"].as<std::string>("");
 
 			const auto with = node["with"].as<std::string>("");
-			rhs._topic = Util::GetFormFromString<RE::TESTopic>(with);
+			rhs._with = Util::GetFormFromString<RE::TESTopic>(with);
 
-			if (rhs._text.empty() && !rhs._topic) {
+			const auto inject = node["inject"].as<std::vector<std::string>>(std::vector<std::string>{});
+			for (const auto& str : inject) {
+				if (const auto topic = Util::GetFormFromString<RE::TESTopic>(str)) {
+					rhs._inject.push_back(topic);
+				}
+			}
+
+			rhs._hide = node["hide"].as<std::string>("") == "true";
+			rhs._proceed = node["proceed"].as<std::string>("true") == "true";
+
+			if (rhs._text.empty() && !rhs._with && !rhs._inject.empty()) {
 				logger::error("replacement must have text or a topic {} {}", rhs._text, with);
 				return true;
 			}

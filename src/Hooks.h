@@ -28,7 +28,7 @@ namespace DDR
 		static bool ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_filePath, BGSVoiceType* a_voiceType, TESTopic* a_topic, TESTopicInfo* a_topicInfo);
 		static inline REL::Relocation<decltype(ConstructResponse)> _ConstructResponse;
 
-		static inline RE::TESTopicInfo::ResponseData* AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4);
+		static inline int64_t AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4);
 		static inline REL::Relocation<decltype(AddTopic)> _AddTopic;
 
 		thread_local static inline std::shared_ptr<Response> _response = nullptr;

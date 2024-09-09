@@ -78,7 +78,7 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 	return false;
 } 
 
-RE::TESTopicInfo::ResponseData* Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4)
+int64_t Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4)
 {
 	if (!a_topic)
 		return _AddTopic(a_this, a_topic, a_3, a_4);
@@ -86,7 +86,21 @@ RE::TESTopicInfo::ResponseData* Hooks::AddTopic(RE::MenuTopicManager* a_this, RE
 	if (const auto& resp = DialogueManager::FindReplacementTopic(a_topic->GetFormID(), DialogueMenuEx::GetTarget(), true)) {
 		//logger::info("testing replacement {} with {}", a_topic->GetFormEditorID(), resp->GetTopic()->GetFormEditorID());
 
-		if (const auto& res = _AddTopic(a_this, resp->GetTopic(), a_3, a_4)) {
+		// hide topic
+		if (resp->IsHidden())
+			return 0;
+
+		// replace topic
+		const auto& repl = resp->GetTopic();
+		const auto& res = repl ? _AddTopic(a_this, repl, a_3, a_4) : 0;
+
+		// inject additional topics
+		const auto& injections = resp->GetInjections();
+		for (const auto& injectTopic : injections) {
+			_AddTopic(a_this, injectTopic, a_3, a_4);
+		}
+
+		if (res || !resp->ShouldProceed()) {
 			return res;
 		}
 	}
