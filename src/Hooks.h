@@ -46,8 +46,6 @@ namespace DDR
 			_inject = REL::Module::GetRuntime() == REL::Module::Runtime::AE;
 		}
 
-		static inline RE::TESObjectREFR* GetTarget() { return _currentTarget; }
-
 		RE::UI_MESSAGE_RESULTS ProcessMessageEx(RE::UIMessage& a_message);
 		
 	private:

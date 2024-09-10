@@ -76,6 +76,18 @@ void DialogueManager::Init()
 	} else {
 		logger::info("replacement dir does not exist");
 	}
+
+	for (auto& [_, replacements] : _topicReplacements) {
+		std::ranges::sort(replacements, [](const auto& a, const auto& b) {
+			return a->GetPriority() > b->GetPriority();
+		});
+	}
+
+	for (auto& [_, replacements] : _respReplacements) {
+		std::ranges::sort(replacements, [](const auto& a, const auto& b) {
+			return a->GetPriority() > b->GetPriority();
+		});
+	}
 }
 
 std::shared_ptr<Response> DialogueManager::FindReplacementResponse(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_responseData)

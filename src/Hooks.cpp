@@ -48,13 +48,27 @@ int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, 
 
 	//logger::info("PopulateTopicInfo - {} - {}", a_2->GetName(), _response != nullptr);
 
+	/*if (_response && !a_5->next && a_5->responseNumber == 5) {
+		auto resp = new RE::TESTopicInfo::ResponseData();
+		resp->emotionType = a_5->emotionType;
+		resp->emotionValue = a_5->emotionValue;
+		resp->unk08 = a_5->unk08;
+		resp->responseNumber = 6;
+		resp->sound = a_5->sound;
+		resp->flags = resp->flags;
+		resp->responseText = "Response 6 (Added) This is a sample replacer. Check this out it's super cool.";
+		resp->speakerIdle = a_5->speakerIdle;
+		resp->listenerIdle = a_5->listenerIdle;
+
+		a_5->next = resp;
+	}*/
+
 	return _PopulateTopicInfo(a_1, a_2, a_3, a_4, a_5);
 }
 
 char* Hooks::SetSubtitle(DialogueResponse* a_response, char* a_text, int32_t a_3)
 {
-	std::string repl{ _response ? _response->GetSubtitle() : "" };
-	std::string text{ repl.empty() ? a_text : repl };
+	auto text = _response ? _response->GetSubtitle() : std::string{ a_text };
 
 	//logger::info("SetSubtitle - {} - {}", a_text, text);
 
@@ -83,25 +97,53 @@ int64_t Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int
 	if (!a_topic)
 		return _AddTopic(a_this, a_topic, a_3, a_4);
 
-	if (const auto& resp = DialogueManager::FindReplacementTopic(a_topic->GetFormID(), DialogueMenuEx::GetTarget(), true)) {
-		//logger::info("testing replacement {} with {}", a_topic->GetFormEditorID(), resp->GetTopic()->GetFormEditorID());
+	const auto& target = Util::GetRef(a_this->speaker);
 
-		// hide topic
-		if (resp->IsHidden())
-			return 0;
+	if (const auto& resp = DialogueManager::FindReplacementTopic(a_topic->GetFormID(), target, true)) {
+		bool flag = true;
+		if (resp->GetCheck()) {
+			flag = false;
+			auto currInfo = a_topic->topicInfos;
+			for (auto i = a_topic->numTopicInfos; i > 0; i--) {
+				if (currInfo && *currInfo) {
+					if ((*currInfo)->objConditions.IsTrue(target, target)) {
+						flag = true;
+						break;
+					}
+				}
 
-		// replace topic
-		const auto& repl = resp->GetTopic();
-		const auto& res = repl ? _AddTopic(a_this, repl, a_3, a_4) : 0;
-
-		// inject additional topics
-		const auto& injections = resp->GetInjections();
-		for (const auto& injectTopic : injections) {
-			_AddTopic(a_this, injectTopic, a_3, a_4);
+				currInfo++;
+			}
 		}
 
-		if (res || !resp->ShouldProceed()) {
-			return res;
+		logger::info("testing replacement {} - {} {} {} {} - {}",
+			a_topic->GetFormEditorID(),
+			resp->GetTopic() ? resp->GetTopic()->GetFormEditorID() : "none",
+			resp->IsHidden(),
+			resp->GetInjections().size(),
+			resp->ShouldProceed(),
+			flag
+		);
+
+		
+		if (flag) {
+			// hide topic
+			if (resp->IsHidden())
+				return 0;
+
+			// replace topic
+			const auto& repl = resp->GetTopic();
+			const auto& res = repl ? _AddTopic(a_this, repl, a_3, a_4) : 0;
+
+			// inject additional topics
+			const auto& injections = resp->GetInjections();
+			for (const auto& injectTopic : injections) {
+				_AddTopic(a_this, injectTopic, a_3, a_4);
+			}
+
+			if (res || !resp->ShouldProceed()) {
+				return res;
+			}
 		}
 	}
 
@@ -113,14 +155,7 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {		
 		// find dialogue target on start
 		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
-
-			_currentTarget = nullptr;
-			if (const auto& targetHandle = menu->speaker) {
-				if (const auto& targetPtr = targetHandle.get()) {
-					_currentTarget = targetPtr.get();
-				}
-			}
-
+			_currentTarget = Util::GetRef(menu->speaker);
 			_currId = -1;
 		}
 

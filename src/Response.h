@@ -75,6 +75,10 @@ namespace DDR
 		{
 			return _conditions == nullptr || _conditions->IsTrue(a_speaker, a_target ? a_target : a_speaker);
 		}
+		inline uint64_t GetPriority()
+		{
+			return _priority;
+		}
 	private:
 		std::string _subtitle;
 		std::string _path;
@@ -84,6 +88,8 @@ namespace DDR
 		
 		int _index;
 		
+		uint64_t _priority;
+
 		std::vector<std::string> _rawConditions;
 		std::shared_ptr<RE::TESCondition> _conditions = nullptr;
 

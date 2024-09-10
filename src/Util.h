@@ -116,4 +116,15 @@ namespace DDR::Util
 
 		return "0x" + str;
 	}
+
+	inline RE::TESObjectREFR* GetRef(RE::ObjectRefHandle a_handle)
+	{
+		if (a_handle) {
+			if (const auto& targetPtr = a_handle.get()) {
+				return targetPtr.get();
+			}
+		}
+
+		return nullptr;
+	}
 }

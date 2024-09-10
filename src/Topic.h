@@ -36,7 +36,8 @@ namespace DDR
 		inline bool ShouldProceed() { return _proceed; }
 		inline RE::TESTopic* GetTopic() { return _with; }
 		inline std::vector<RE::TESTopic*> GetInjections() { return _inject; }
-
+		inline uint64_t GetPriority() { return _priority; }
+		inline bool GetCheck() { return _check; }
 	private:
 		RE::FormID _id = 0;
 		std::string _text;
@@ -50,6 +51,9 @@ namespace DDR
 		bool _valid = false;
 		bool _hide = false;
 		bool _proceed = false;
+		bool _check = false;
+
+		uint64_t _priority;
 
 		friend struct YAML::convert<Topic>;
 	};
@@ -79,6 +83,7 @@ namespace YAML
 			}
 
 			rhs._text = node["text"].as<std::string>("");
+			rhs._priority = node["priority"].as<uint64_t>(0);
 
 			const auto with = node["with"].as<std::string>("");
 			rhs._with = Util::GetFormFromString<RE::TESTopic>(with);
@@ -92,6 +97,7 @@ namespace YAML
 
 			rhs._hide = node["hide"].as<std::string>("") == "true";
 			rhs._proceed = node["proceed"].as<std::string>("true") == "true";
+			rhs._check = node["check"].as<std::string>("") == "true";
 
 			if (rhs._text.empty() && !rhs._with && !rhs._inject.empty()) {
 				logger::error("replacement must have text or a topic {} {}", rhs._text, with);
