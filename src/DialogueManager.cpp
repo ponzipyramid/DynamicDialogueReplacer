@@ -116,9 +116,8 @@ std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Characte
 		return nullptr;
 	}
 
-	const auto key = TopicInfo::GenerateHash(a_topicInfo->GetFormID(), voiceType, a_responseData->responseNumber);
-	const auto allKey = TopicInfo::GenerateHash(a_topicInfo->GetFormID(), a_responseData->responseNumber);
-	
+	const auto key = TopicInfo::GenerateHash(a_topicInfo->GetFormID(), voiceType);
+	const auto allKey = TopicInfo::GenerateHash(a_topicInfo->GetFormID());
 
 	// try stored overrides next
 	auto iter = _respReplacements.find(key);
@@ -128,10 +127,23 @@ std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Characte
 
 	if (iter != _respReplacements.end()) {
 		const auto& replacements = iter->second;
+		
+
+		std::vector<std::shared_ptr<TopicInfo>> candidates;
 
 		for (const auto& repl : replacements) {
-			if (repl->ConditionsMet(speaker, target))
-				return repl;
+			const auto rand = repl->IsRand();
+			if ((candidates.empty() || rand) && repl->ConditionsMet(speaker, target)) {
+				if (rand) {
+					candidates.push_back(repl);
+				} else {
+					return repl;
+				}
+			}
+		}
+
+		if (!candidates.empty()) {
+			return candidates[Util::GetRandInt(0, (int)candidates.size() - 1)];
 		}
 	}
 

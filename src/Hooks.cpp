@@ -44,31 +44,23 @@ void Hooks::Install()
 
 int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, Character* a_4, RE::TESTopicInfo::ResponseData* a_5)
 {
-	_response = DialogueManager::FindReplacementResponse(a_4, a_3, a_5);
+	_responseNumber = a_5->responseNumber;
+	if (_responseNumber == 1) {
+		_response = DialogueManager::FindReplacementResponse(a_4, a_3, a_5);
+	}
 
-	//logger::info("PopulateTopicInfo - {} - {}", a_2->GetName(), _response != nullptr);
-
-	/*if (_response && !a_5->next && a_5->responseNumber == 5) {
-		auto resp = new RE::TESTopicInfo::ResponseData();
-		resp->emotionType = a_5->emotionType;
-		resp->emotionValue = a_5->emotionValue;
-		resp->unk08 = a_5->unk08;
-		resp->responseNumber = 6;
-		resp->sound = a_5->sound;
-		resp->flags = resp->flags;
-		resp->responseText = "Response 6 (Added) This is a sample replacer. Check this out it's super cool.";
-		resp->speakerIdle = a_5->speakerIdle;
-		resp->listenerIdle = a_5->listenerIdle;
-
-		a_5->next = resp;
-	}*/
+	if (_response && _response->ShouldCut(_responseNumber)) {
+		logger::info("cutting remaining responses: {}", _responseNumber);
+		delete a_5->next;
+		a_5->next = nullptr;
+	}
 
 	return _PopulateTopicInfo(a_1, a_2, a_3, a_4, a_5);
 }
 
 char* Hooks::SetSubtitle(DialogueResponse* a_response, char* a_text, int32_t a_3)
 {
-	auto text = _response ? _response->GetSubtitle() : std::string{ a_text };
+	std::string text{ (_response && _response->HasReplacement(_responseNumber)) ? _response->GetSubtitle(_responseNumber) : a_text };
 
 	//logger::info("SetSubtitle - {} - {}", a_text, text);
 
@@ -80,10 +72,10 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 	if (_ConstructResponse(a_response, a_filePath, a_voiceType, a_topic, a_topicInfo)) {
 		std::string filePath{ a_filePath };
 		
-		if (_response)
+		if (_response && _response->HasReplacement(_responseNumber))
 		{
 			*a_filePath = NULL;
-			strcat_s(a_filePath, 0x104ui64, _response->GetPath(a_topic, a_topicInfo, a_voiceType).c_str());
+			strcat_s(a_filePath, 0x104ui64, _response->GetPath(a_topic, a_topicInfo, a_voiceType, a_response->responseNumber).c_str());
 		}
 
 		return true;

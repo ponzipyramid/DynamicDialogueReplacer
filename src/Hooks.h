@@ -32,7 +32,7 @@ namespace DDR
 		static inline REL::Relocation<decltype(AddTopic)> _AddTopic;
 
 		thread_local static inline std::shared_ptr<TopicInfo> _response = nullptr;
-		static inline RE::FormID _currTopicInfoId;
+		thread_local static inline int _responseNumber = -1;
 	};
 
 	class DialogueMenuEx : public RE::DialogueMenu

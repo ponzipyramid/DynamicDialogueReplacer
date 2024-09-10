@@ -14,6 +14,14 @@ namespace DDR::Util
 		return { range.begin(), range.end() };
 	}
 
+	inline int GetRandInt(int a_min, int a_max)
+	{
+		std::random_device rand_dev;
+		std::mt19937 generator(rand_dev());
+		std::uniform_int_distribution<int> distr(a_min, a_max);
+		return distr(generator);
+	}
+
 	inline std::string Join(const std::vector<std::string>& a_vec, std::string_view a_delimiter)
 	{
 		return std::accumulate(a_vec.begin(), a_vec.end(), std::string{},
