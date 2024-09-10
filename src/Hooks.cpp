@@ -106,7 +106,7 @@ int64_t Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int
 			auto currInfo = a_topic->topicInfos;
 			for (auto i = a_topic->numTopicInfos; i > 0; i--) {
 				if (currInfo && *currInfo) {
-					if ((*currInfo)->objConditions.IsTrue(target, target)) {
+					if ((*currInfo)->objConditions.IsTrue(target, RE::PlayerCharacter::GetSingleton())) {
 						flag = true;
 						break;
 					}

@@ -5,11 +5,17 @@
 
 namespace DDR
 {
-	class Response
+	struct Response
+	{
+		std::string sub;
+		std::string path;
+	};
+
+	class TopicInfo
 	{
 	public:
-		Response() = default;
-		inline Response(RE::FormID a_id, int index, std::string a_sub, std::string a_path, std::vector<RE::BGSVoiceType*> a_voices)
+		TopicInfo() = default;
+		inline TopicInfo(RE::FormID a_id, int index, std::string a_sub, std::string a_path, std::vector<RE::BGSVoiceType*> a_voices)
 		{
 			_topicInfoId = a_id;
 			_index = index;
@@ -95,7 +101,7 @@ namespace DDR
 
 		bool _valid = false;
 
-		friend struct YAML::convert<Response>; 
+		friend struct YAML::convert<TopicInfo>; 
 	};
 }
 
@@ -104,9 +110,9 @@ namespace YAML
 	using namespace DDR;
 
 	template <>
-	struct convert<Response>
+	struct convert<TopicInfo>
 	{
-		static bool decode(const Node& node, Response& rhs)
+		static bool decode(const Node& node, TopicInfo& rhs)
 		{
 			const auto topicInfo = node["id"].as<std::string>();
 			if (const auto parsed = Util::ParseFormId(topicInfo)) {

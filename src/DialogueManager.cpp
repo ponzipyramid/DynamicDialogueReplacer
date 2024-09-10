@@ -39,10 +39,10 @@ void DialogueManager::Init()
 					}
 				}
 
-				auto respReplacements = file["topicInfos"].as<std::vector<Response>>(std::vector<Response>{});
+				auto respReplacements = file["topicInfos"].as<std::vector<TopicInfo>>(std::vector<TopicInfo>{});
 
 				for (auto& rr : respReplacements) {
-					const auto repl = std::make_shared<Response>(rr);
+					const auto repl = std::make_shared<TopicInfo>(rr);
 					if (repl->IsValid() && repl->Init(refMap)) {
 						_responses.emplace_back(repl);
 
@@ -90,7 +90,7 @@ void DialogueManager::Init()
 	}
 }
 
-std::shared_ptr<Response> DialogueManager::FindReplacementResponse(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_responseData)
+std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_responseData)
 {
 	if (!a_topicInfo || !a_responseData) {
 		return nullptr;
@@ -116,8 +116,8 @@ std::shared_ptr<Response> DialogueManager::FindReplacementResponse(RE::Character
 		return nullptr;
 	}
 
-	const auto key = Response::GenerateHash(a_topicInfo->GetFormID(), voiceType, a_responseData->responseNumber);
-	const auto allKey = Response::GenerateHash(a_topicInfo->GetFormID(), a_responseData->responseNumber);
+	const auto key = TopicInfo::GenerateHash(a_topicInfo->GetFormID(), voiceType, a_responseData->responseNumber);
+	const auto allKey = TopicInfo::GenerateHash(a_topicInfo->GetFormID(), a_responseData->responseNumber);
 	
 
 	// try stored overrides next

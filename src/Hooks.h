@@ -31,7 +31,7 @@ namespace DDR
 		static inline int64_t AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int64_t a_3, int64_t a_4);
 		static inline REL::Relocation<decltype(AddTopic)> _AddTopic;
 
-		thread_local static inline std::shared_ptr<Response> _response = nullptr;
+		thread_local static inline std::shared_ptr<TopicInfo> _response = nullptr;
 		static inline RE::FormID _currTopicInfoId;
 	};
 
