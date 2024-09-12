@@ -50,7 +50,6 @@ int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, 
 	}
 
 	if (_response && _response->ShouldCut(_responseNumber)) {
-		logger::info("cutting remaining responses: {}", _responseNumber);
 		delete a_5->next;
 		a_5->next = nullptr;
 	}
@@ -60,7 +59,7 @@ int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, 
 
 char* Hooks::SetSubtitle(DialogueResponse* a_response, char* a_text, int32_t a_3)
 {
-	std::string text{ (_response && _response->HasReplacement(_responseNumber)) ? _response->GetSubtitle(_responseNumber) : a_text };
+	std::string text{ (_response && _response->HasReplacementSub(_responseNumber)) ? _response->GetSubtitle(_responseNumber) : a_text };
 
 	//logger::info("SetSubtitle - {} - {}", a_text, text);
 
@@ -72,8 +71,9 @@ bool Hooks::ConstructResponse(TESTopicInfo::ResponseData* a_response, char* a_fi
 	if (_ConstructResponse(a_response, a_filePath, a_voiceType, a_topic, a_topicInfo)) {
 		std::string filePath{ a_filePath };
 		
-		if (_response && _response->HasReplacement(_responseNumber))
+		if (_response && _response->HasReplacementPath(_responseNumber))
 		{
+			//logger::info("replacing with {}", _response->GetPath(a_topic, a_topicInfo, a_voiceType, a_response->responseNumber));
 			*a_filePath = NULL;
 			strcat_s(a_filePath, 0x104ui64, _response->GetPath(a_topic, a_topicInfo, a_voiceType, a_response->responseNumber).c_str());
 		}
@@ -107,16 +107,6 @@ int64_t Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int
 				currInfo++;
 			}
 		}
-
-		logger::info("testing replacement {} - {} {} {} {} - {}",
-			a_topic->GetFormEditorID(),
-			resp->GetTopic() ? resp->GetTopic()->GetFormEditorID() : "none",
-			resp->IsHidden(),
-			resp->GetInjections().size(),
-			resp->ShouldProceed(),
-			flag
-		);
-
 		
 		if (flag) {
 			// hide topic

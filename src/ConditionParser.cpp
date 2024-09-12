@@ -83,6 +83,7 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 		auto comparand = mComparand.str();
 		if (auto global = RE::TESForm::LookupByEditorID<RE::TESGlobal>(comparand)) {
 			data.comparisonValue.g = global;
+			data.flags.global = true;
 		} else {
 			data.comparisonValue.f = std::stof(comparand);
 		}

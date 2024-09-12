@@ -43,7 +43,11 @@ namespace DDR
 					}) 
 				| std::ranges::to<std::vector>();
 		}
-		inline bool HasReplacement(int a_number) { return a_number <= _responses.size() && !_responses[a_number - 1].keep; }
+		
+		inline bool HasReplacement(int a_num) { return a_num <= _responses.size() && !_responses[a_num - 1].keep; }
+		inline bool HasReplacementSub(int a_num) { return HasReplacement(a_num) && !_responses[a_num - 1].sub.empty(); }
+		inline bool HasReplacementPath(int a_num) { return HasReplacement(a_num) && !_responses[a_num - 1].path.empty(); }
+		
 		inline std::string GetSubtitle(int a_num) { return _responses[a_num - 1].sub; }
 		inline std::string GetPath(RE::TESTopic* a_topic, RE::TESTopicInfo* a_topicInfo, RE::BGSVoiceType* a_voiceType, int a_num)
 		{
