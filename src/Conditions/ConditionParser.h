@@ -58,6 +58,7 @@ namespace Conditions
 			std::int32_t i;
 			float f;
 			RE::TESForm* form;
+			RE::BSString* str;
 		};
 
 		static auto ParseParam(

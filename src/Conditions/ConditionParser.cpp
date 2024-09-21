@@ -15,7 +15,7 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 	const std::string refStr{ splits.size() == 2 ? splits[0] : "" };
 
 	static srell::regex re{
-		R"((\w+)\s+((\w+)(\s+(\w+))?\s*)?(==|!=|>|>=|<|<=)\s*(\w+)(\s+(AND|OR))?)"
+		R"((\w+)\s+((\w+)(\s+([\w:]+))?\s*)?(==|!=|>|>=|<|<=)\s*(\w+)(\s+(AND|OR))?)"
 	};
 
 	srell::cmatch m;
@@ -143,6 +143,12 @@ auto ConditionParser::ParseParam(
 	case RE::SCRIPT_PARAM_TYPE::kCastingSource:
 		param.i = ConditionUtil::to_underlying(EnumLookup::LookupCastingSource(textCIS));
 		break;
+
+	case RE::SCRIPT_PARAM_TYPE::kVMScriptVar:
+		{
+			param.str = new RE::BSString(a_text.c_str());
+			break;
+		}	
 	default:
 		param.form = LookupForm(textCIS, a_refs);
 		break;

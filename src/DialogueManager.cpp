@@ -118,8 +118,7 @@ std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Characte
 
 	if (iter != _respReplacements.end()) {
 		const auto& replacements = iter->second;
-		
-
+	
 		std::vector<std::shared_ptr<TopicInfo>> candidates;
 
 		for (const auto& repl : replacements) {
