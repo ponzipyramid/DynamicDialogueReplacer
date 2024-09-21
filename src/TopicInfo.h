@@ -142,6 +142,8 @@ namespace YAML
 			}
 
 			rhs._responses = node["responses"].as<std::vector<Response>>(std::vector<Response>{});
+			rhs._priority = node["priority"].as<uint64_t>(0);
+
 
 			if (rhs._responses.empty()) {
 				logger::info("failed to find responses in replacement");
