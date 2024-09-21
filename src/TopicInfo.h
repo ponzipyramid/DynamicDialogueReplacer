@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Util.h"
-#include "ConditionParser.h"
+#include "Conditions/ConditionParser.h"
+
+using namespace Conditions;
 
 namespace DDR
 {
@@ -72,7 +74,7 @@ namespace DDR
 
 			return Util::Join(sections, "\\"sv); 
 		}
-		inline bool Init(ConditionParser::RefMap& a_refs)
+		inline bool Init(const ConditionParser::RefMap& a_refs)
 		{
 			_conditions = ConditionParser::ParseConditions(_rawConditions, a_refs);
 			_rawConditions.clear();
@@ -133,7 +135,7 @@ namespace YAML
 		static bool decode(const Node& node, TopicInfo& rhs)
 		{
 			const auto topicInfo = node["id"].as<std::string>();
-			if (const auto parsed = Util::ParseFormId(topicInfo)) {
+			if (const auto parsed = DDR::Util::ParseFormId(topicInfo)) {
 				const auto [formId, espName] = parsed.value();
 				rhs._topicInfoId = RE::TESDataHandler::GetSingleton()->LookupFormID(formId, espName);
 			} else {

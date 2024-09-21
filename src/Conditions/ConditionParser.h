@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Util.h"
+#include "ConditionUtil.h"
 
 // stolen from DAV (https://github.com/Exit-9B/DynamicArmorVariants)
-namespace DDR
+namespace Conditions
 {
 	class ConditionParser
 	{
@@ -14,7 +14,7 @@ namespace DDR
 
 		static auto Parse(std::string_view a_text, const RefMap& a_refs) -> RE::TESConditionItem*;
 
-		static inline std::shared_ptr<RE::TESCondition> ParseConditions(std::vector<std::string>& a_rawConditions, ConditionParser::RefMap& a_refs)
+		static inline std::shared_ptr<RE::TESCondition> ParseConditions(const std::vector<std::string>& a_rawConditions, const ConditionParser::RefMap& a_refs)
 		{
 			auto condition = std::make_shared<RE::TESCondition>();
 			RE::TESConditionItem** head = std::addressof(condition->head);
@@ -23,6 +23,7 @@ namespace DDR
 			for (auto& text : a_rawConditions) {
 				if (text.empty())
 					continue;
+
 
 				if (auto conditionItem = ConditionParser::Parse(text, a_refs)) {
 					*head = conditionItem;
@@ -35,6 +36,20 @@ namespace DDR
 			}
 
 			return numConditions ? condition : nullptr;
+		}
+
+		static inline RefMap GenerateRefMap(std::unordered_map<std::string, std::string> a_rawRefs)
+		{
+			ConditionParser::RefMap refMap;
+			refMap["PLAYER"] = RE::PlayerCharacter::GetSingleton();
+
+			for (const auto& [key, value] : a_rawRefs) {
+				if (const auto form = ConditionUtil::GetFormFromString(value)) {
+					refMap[key] = form;
+				}
+			}
+
+			return refMap;
 		}
 	private:
 		union ConditionParam
@@ -57,7 +72,7 @@ namespace DDR
 				return it->second->As<T>();
 			}
 
-			return Util::GetFormFromString<T>(a_text);
+			return ConditionUtil::GetFormFromString<T>(a_text);
 		}
 	};
 }

@@ -1,6 +1,7 @@
 #include "DialogueManager.h"
 
 using namespace DDR;
+using namespace Conditions;
 
 void DialogueManager::Init()
 {
@@ -28,17 +29,7 @@ void DialogueManager::Init()
 			try {
 				const auto file = YAML::LoadFile(fileName);
 
-				ConditionParser::RefMap refMap;
-				refMap["PLAYER"] = RE::PlayerCharacter::GetSingleton();
-
-				const auto rawMap = file["refs"].as<std::unordered_map<std::string, std::string>>(std::unordered_map<std::string, std::string>{});
-
-				for (const auto& [key, value] : rawMap) {
-					if (const auto form = Util::GetFormFromString(value)) {
-						refMap[key] = form;
-					}
-				}
-
+				const auto refMap = ConditionParser::GenerateRefMap(file["refs"].as<std::unordered_map<std::string, std::string>>(std::unordered_map<std::string, std::string>{}));
 				auto respReplacements = file["topicInfos"].as<std::vector<TopicInfo>>(std::vector<TopicInfo>{});
 
 				for (auto& rr : respReplacements) {

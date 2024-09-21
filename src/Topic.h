@@ -1,7 +1,9 @@
 #pragma once
 
-#include "ConditionParser.h"
+#include "Conditions/ConditionParser.h"
 #include "Util.h"
+
+using namespace Conditions;
 
 namespace DDR
 {
