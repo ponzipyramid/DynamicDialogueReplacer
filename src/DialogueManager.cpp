@@ -50,7 +50,7 @@ void DialogueManager::Init()
 				for (auto& tr : topicReplacements) {
 					const auto repl = std::make_shared<Topic>(tr);
 
-					if (repl->IsValid() && repl->InitConditions(refMap)) {
+					if (repl->IsValid() && repl->Init(refMap)) {
 						_topics.emplace_back(repl);
 						_topicReplacements[repl->GetId()].emplace_back(_topics[_topics.size() - 1]);
 					} else {
