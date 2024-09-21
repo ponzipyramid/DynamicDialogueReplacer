@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Script.h"
+
 namespace DDR::Util
 {
 	using SKSE::stl::enumeration;
@@ -134,5 +136,30 @@ namespace DDR::Util
 		}
 
 		return nullptr;
+	}
+
+	inline void LogCondition(RE::TESConditionItem* a_item, RE::TESObjectREFR* a_speaker, RE::TESObjectREFR* a_target)
+	{
+		const auto& data = a_item->data;
+		const auto& funcData = data.functionData;
+		const auto funcType = (int)funcData.function.get();
+		const auto id = data.dataID;
+
+		const auto quest = static_cast<RE::TESQuest*>(funcData.params[0]);
+		const auto varName = static_cast<RE::BSString*>(funcData.params[1]);
+
+		RE::ConditionCheckParams params{ a_speaker, a_target };
+
+		logger::info("found condition: func = {}, var 1 = {}, var 2 = {}, id = {}, compare = {}, value = {}, runOnRef = {}, object = {}, result = {}",
+			funcType,
+			quest->GetFormEditorID(),
+			varName->c_str(),
+			id,
+			(int)data.flags.opCode,
+			data.comparisonValue.f,
+			(bool)data.runOnRef.get() && data.runOnRef.get().get(),
+			(int)data.object.get(),
+			a_item->IsTrue(params)
+		);
 	}
 }

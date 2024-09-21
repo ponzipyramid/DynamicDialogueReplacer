@@ -67,7 +67,7 @@ void DialogueManager::Init()
 					}
 				}
 
-				logger::info("loaded {} response replacements and {} topic replacements from {}", _respReplacements.size(), _topicReplacements.size(), fileName);
+				logger::info("loaded {} topic info replacements and {} topic replacements from {}", _respReplacements.size(), _topicReplacements.size(), fileName);
 
 			} catch (std::exception& e) {
 				logger::info("failed to load {} - {}", fileName, e.what());
@@ -90,7 +90,7 @@ void DialogueManager::Init()
 	}
 }
 
-std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_responseData)
+std::shared_ptr<TopicInfo> DialogueManager::FindReplacementTopicInfo(RE::Character* a_speaker, RE::TESTopicInfo* a_topicInfo, RE::TESTopicInfo::ResponseData* a_responseData)
 {
 	if (!a_topicInfo || !a_responseData) {
 		return nullptr;
@@ -128,11 +128,20 @@ std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Characte
 	if (iter != _respReplacements.end()) {
 		const auto& replacements = iter->second;
 		
-
 		std::vector<std::shared_ptr<TopicInfo>> candidates;
 
 		for (const auto& repl : replacements) {
 			const auto rand = repl->IsRand();
+
+			if (a_topicInfo->GetFormID() == RE::TESDataHandler::GetSingleton()->LookupFormID(0x406065, "DeviousFollowers.esp")) {
+				logger::info("found offer response");
+				const auto sub = repl->GetSubtitle(1);
+				if (sub.contains("potion")) {
+					logger::info("check: {}", sub, repl->ConditionsMet(speaker, target));
+
+				}
+			
+			}
 			if ((candidates.empty() || rand) && repl->ConditionsMet(speaker, target)) {
 				if (rand) {
 					candidates.push_back(repl);
@@ -143,7 +152,11 @@ std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Characte
 		}
 
 		if (!candidates.empty()) {
-			return candidates[Util::GetRandInt(0, (int)candidates.size() - 1)];
+			// consider original if kept
+			const auto max = (int)candidates.size() - (int)!candidates[0]->IsKeep();
+			const auto pick = Util::GetRandInt(0, max);
+
+			return pick < candidates.size() ? candidates[pick] : 0;
 		}
 	}
 

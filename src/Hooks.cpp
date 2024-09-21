@@ -8,7 +8,7 @@ namespace RE
 	{
 		// add SE address
 		using func_t = decltype(&RE::AddTopic);
-		REL::Relocation<func_t> func{ REL::ID(35303) };
+		REL::Relocation<func_t> func{ REL::RelocationID(34476, 35303) };
 		return func(a_this, a_topic, a_3, a_4);
 	}
 }
@@ -46,12 +46,29 @@ int64_t Hooks::PopulateTopicInfo(int64_t a_1, TESTopic* a_2, TESTopicInfo* a_3, 
 {
 	_responseNumber = a_5->responseNumber;
 	if (_responseNumber == 1) {
-		_response = DialogueManager::FindReplacementResponse(a_4, a_3, a_5);
+		_response = DialogueManager::FindReplacementTopicInfo(a_4, a_3, a_5);
 	}
 
 	if (_response && _response->ShouldCut(_responseNumber)) {
 		delete a_5->next;
 		a_5->next = nullptr;
+	}
+
+	if (a_3 && a_3->GetFormID() == RE::TESDataHandler::GetSingleton()->LookupFormID(0x406065, "DeviousFollowers.esp")) {
+		logger::info("found corresponding dialogue");
+		if (const auto conds = a_3->objConditions.head) {
+			auto ptr = conds;
+			while (ptr) {
+				const auto& data = ptr->data;
+				const auto& funcData = data.functionData;
+				const auto funcType = (int)funcData.function.get();
+
+				if (funcType == 629) {
+					Util::LogCondition(ptr, a_4, RE::PlayerCharacter::GetSingleton());
+				}
+				ptr = ptr->next;
+			}
+		}
 	}
 
 	return _PopulateTopicInfo(a_1, a_2, a_3, a_4, a_5);
@@ -91,7 +108,7 @@ int64_t Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int
 
 	const auto& target = Util::GetRef(a_this->speaker);
 
-	if (const auto& resp = DialogueManager::FindReplacementTopic(a_topic->GetFormID(), target, true)) {
+	if (const auto& resp = DialogueManager::FindReplacementTopic(a_topic->GetFormID(), target, true)) {		
 		bool flag = true;
 		if (resp->GetCheck()) {
 			flag = false;
@@ -114,8 +131,8 @@ int64_t Hooks::AddTopic(RE::MenuTopicManager* a_this, RE::TESTopic* a_topic, int
 				return 0;
 
 			// replace topic
-			const auto& repl = resp->GetTopic();
-			const auto& res = repl ? _AddTopic(a_this, repl, a_3, a_4) : 0;
+			const auto& res = _AddTopic(a_this, resp->GetTopic(), a_3, a_4);
+			logger::info("replacing {}", res);
 
 			// inject additional topics
 			const auto& injections = resp->GetInjections();
@@ -136,24 +153,23 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 {
 	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {		
 		// find dialogue target on start
+
 		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
 			_currentTarget = Util::GetRef(menu->speaker);
-			_currId = -1;
 		}
 
-		const auto rootId = menu->rootTopicInfo ? menu->rootTopicInfo->GetFormID() : 0;
-
-		if (_currId == -1 || _currId != rootId) {
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kUpdate) {
 			_cache.clear();
-			_currId = rootId;
 		}
+
+		std::unordered_set<RE::FormID> seenIds;
 
 		if (const auto dialogue = menu->dialogueList) {
 			#pragma warning(suppress: 4834)
 			for (auto it = dialogue->begin(); it != dialogue->end(); it++) {
 				if (auto curr = *it) {
 					const auto id = curr->parentTopic->GetFormID();
-
+					seenIds.insert(id);
 					std::shared_ptr<Topic> replacement = nullptr;
 					const auto iter = _cache.find(id);
 					if (iter != _cache.end()) { // find in cache first

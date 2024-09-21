@@ -81,17 +81,31 @@ namespace DDR
 		}
 		inline bool ConditionsMet(RE::TESObjectREFR* a_speaker, RE::TESObjectREFR* a_target)
 		{
+			const auto questScr = Script::GetScriptObject(RE::TESForm::LookupByEditorID<RE::TESQuest>("DFR_Services"), "DFR_Services");
+			const auto prop = Script::GetProperty<int>(questScr, "PotionType");
+
+			logger::info("Potion Type: {}", prop);
+
+			if (_conditions) {
+				auto ptr = _conditions->head;
+				while (ptr) {
+					const auto& data = ptr->data;
+					const auto& funcData = data.functionData;
+					const auto funcType = (int)funcData.function.get();
+
+					if (funcType == 629) {
+						Util::LogCondition(ptr, a_speaker, a_target);
+					}
+					ptr = ptr->next;
+				}
+			}
+
 			return _conditions == nullptr || _conditions->IsTrue(a_speaker, a_target ? a_target : a_speaker);
 		}
-		inline bool IsRand()
-		{
-			return _random;
-		}
+		inline bool IsRand() { return _random; }
+		inline bool IsKeep() { return _keep; }
 		inline bool ShouldCut(int a_num) { return _cut && a_num >= _responses.size(); }
-		inline uint64_t GetPriority()
-		{
-			return _priority;
-		}
+		inline uint64_t GetPriority() { return _priority; }
 	private:
 		RE::FormID _topicInfoId;
 		
@@ -106,6 +120,7 @@ namespace DDR
 		bool _valid = false;
 		bool _random = false;
 		bool _cut = true;
+		bool _keep = false;
 
 		friend struct YAML::convert<TopicInfo>; 
 	};
@@ -163,6 +178,9 @@ namespace YAML
 
 			rhs._random = node["random"].as<std::string>("") == "true";
 			rhs._cut = node["cut"].as<std::string>("true") == "true";
+			rhs._keep = node["keep"].as<std::string>("") == "true";
+
+			rhs._priority = node["priority"].as<uint64_t>(0);
 
 			rhs._valid = true;
 			

@@ -42,10 +42,19 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 	auto functionIndex = Util::to_underlying(function->output) - 0x1000;
 	data.functionData.function = static_cast<RE::FUNCTION_DATA::FunctionID>(functionIndex);
 
+	const auto type = (int)data.functionData.function.get();
+	if (type == 629)
+	logger::info("found function: {}", type);
+
 	if (mParam1.matched) {
 		if (function->numParams >= 1) {
+		
 			data.functionData.params[0] = std::bit_cast<void*>(
 				ParseParam(mParam1.str(), function->params[0].paramType.get(), a_refs));
+
+			if (type == 629)
+				logger::info("Param 1 Type: {} {}", (int)function->params[0].paramType.get(), (reinterpret_cast<RE::TESQuest*>(data.functionData.params[0]))->GetFormEditorID());
+
 		} else {
 			logger::warn("Condition function {} ignoring parameter: {}", function->functionName, mParam1.str());
 		}
@@ -54,7 +63,11 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 	if (mParam2.matched) {
 		if (function->numParams >= 2) {
 			data.functionData.params[1] = std::bit_cast<void*>(
-				ParseParam(mParam1.str(), function->params[1].paramType.get(), a_refs));
+				ParseParam(mParam2.str(), function->params[1].paramType.get(), a_refs));
+
+			if (type == 629) {
+				logger::info("Param 2 Type: {} {}", (int)function->params[1].paramType.get(), (reinterpret_cast<RE::BSString*>(data.functionData.params[1]))->c_str());
+			}
 		} else {
 			logger::warn("Condition function {} ignoring parameter: {}", function->functionName, mParam2.str());
 		}
@@ -81,6 +94,7 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 
 	if (mComparand.matched) {
 		auto comparand = mComparand.str();
+
 		if (auto global = RE::TESForm::LookupByEditorID<RE::TESGlobal>(comparand)) {
 			data.comparisonValue.g = global;
 			data.flags.global = true;
@@ -89,6 +103,10 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 		}
 	} else {
 		data.comparisonValue.f = 0.f;
+	}
+
+	if (type == 629) {
+		logger::info("Comparison: {}", data.comparisonValue.f);
 	}
 
 	if (mConnective.matched) {
@@ -143,6 +161,12 @@ auto ConditionParser::ParseParam(
 	case RE::SCRIPT_PARAM_TYPE::kCastingSource:
 		param.i = Util::to_underlying(EnumLookup::LookupCastingSource(textCIS));
 		break;
+	case RE::SCRIPT_PARAM_TYPE::kVMScriptVar: {
+		std::string str{ "::" + a_text + "_var" };
+		logger::info("parsed {}", str);
+		param.str = new RE::BSString(str.c_str());
+		break;
+	}	
 	default:
 		param.form = LookupForm(textCIS, a_refs);
 		break;

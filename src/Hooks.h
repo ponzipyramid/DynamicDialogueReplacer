@@ -47,12 +47,10 @@ namespace DDR
 		}
 
 		RE::UI_MESSAGE_RESULTS ProcessMessageEx(RE::UIMessage& a_message);
-		
 	private:
 		using ProcessMessageFn = decltype(&RE::DialogueMenu::ProcessMessage);
 		static inline REL::Relocation<ProcessMessageFn> _ProcessMessageFn;
 
-		static inline int64_t _currId;
 		static inline RE::TESObjectREFR* _currentTarget;
 		static inline std::unordered_map<RE::FormID, std::shared_ptr<Topic>> _cache;
 		static inline bool _inject = true;

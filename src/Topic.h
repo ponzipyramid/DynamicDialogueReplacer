@@ -100,7 +100,7 @@ namespace YAML
 			rhs._check = node["check"].as<std::string>("") == "true";
 
 			if (rhs._text.empty() && !rhs._with && !rhs._inject.empty()) {
-				logger::error("replacement must have text or a topic {} {}", rhs._text, with);
+				logger::error("replacement must have text, topic, or injections");
 				return true;
 			}
 
