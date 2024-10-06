@@ -136,7 +136,7 @@ RE::UI_MESSAGE_RESULTS DialogueMenuEx::ProcessMessageEx(RE::UIMessage& a_message
 {
 	if (const auto menu = RE::MenuTopicManager::GetSingleton()) {		
 		// find dialogue target on start
-		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow) {
+		if (a_message.type == RE::UI_MESSAGE_TYPE::kShow || a_message.type == RE::UI_MESSAGE_TYPE::kUpdate) {
 			_currentTarget = Util::GetRef(menu->speaker);
 			_currId = -1;
 		}
