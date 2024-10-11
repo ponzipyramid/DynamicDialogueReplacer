@@ -1,6 +1,7 @@
 #include "DialogueManager.h"
 
 using namespace DDR;
+using namespace Conditions;
 
 void DialogueManager::Init()
 {
@@ -28,17 +29,7 @@ void DialogueManager::Init()
 			try {
 				const auto file = YAML::LoadFile(fileName);
 
-				ConditionParser::RefMap refMap;
-				refMap["PLAYER"] = RE::PlayerCharacter::GetSingleton();
-
-				const auto rawMap = file["refs"].as<std::unordered_map<std::string, std::string>>(std::unordered_map<std::string, std::string>{});
-
-				for (const auto& [key, value] : rawMap) {
-					if (const auto form = Util::GetFormFromString(value)) {
-						refMap[key] = form;
-					}
-				}
-
+				const auto refMap = ConditionParser::GenerateRefMap(file["refs"].as<std::unordered_map<std::string, std::string>>(std::unordered_map<std::string, std::string>{}));
 				auto respReplacements = file["topicInfos"].as<std::vector<TopicInfo>>(std::vector<TopicInfo>{});
 
 				for (auto& rr : respReplacements) {
@@ -59,7 +50,7 @@ void DialogueManager::Init()
 				for (auto& tr : topicReplacements) {
 					const auto repl = std::make_shared<Topic>(tr);
 
-					if (repl->IsValid() && repl->InitConditions(refMap)) {
+					if (repl->IsValid() && repl->Init(refMap)) {
 						_topics.emplace_back(repl);
 						_topicReplacements[repl->GetId()].emplace_back(_topics[_topics.size() - 1]);
 					} else {
@@ -127,8 +118,7 @@ std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Characte
 
 	if (iter != _respReplacements.end()) {
 		const auto& replacements = iter->second;
-		
-
+	
 		std::vector<std::shared_ptr<TopicInfo>> candidates;
 
 		for (const auto& repl : replacements) {

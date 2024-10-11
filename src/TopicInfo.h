@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Util.h"
-#include "ConditionParser.h"
+#include "Conditions/Conditional.h"
+
+using namespace Conditions;
 
 namespace DDR
 {
@@ -12,7 +14,7 @@ namespace DDR
 		std::string path;
 	};
 
-	class TopicInfo
+	class TopicInfo : public Conditional
 	{
 	public:
 		TopicInfo() = default;
@@ -34,6 +36,7 @@ namespace DDR
 		{
 			return std::format("{}|all", a_topicInfoId);
 		}
+		inline bool Init(const ConditionParser::RefMap& a_refs) { return InitConditions(_rawConditions, a_refs); }
 		inline bool IsValid() { return _valid; }
 		inline std::vector<std::string> GetHashes() const {
 			return _voiceTypes.empty() ? std::vector<std::string>{ GenerateHash(_topicInfoId) } :
@@ -72,17 +75,6 @@ namespace DDR
 
 			return Util::Join(sections, "\\"sv); 
 		}
-		inline bool Init(ConditionParser::RefMap& a_refs)
-		{
-			_conditions = ConditionParser::ParseConditions(_rawConditions, a_refs);
-			_rawConditions.clear();
-
-			return true;
-		}
-		inline bool ConditionsMet(RE::TESObjectREFR* a_speaker, RE::TESObjectREFR* a_target)
-		{
-			return _conditions == nullptr || _conditions->IsTrue(a_speaker, a_target ? a_target : a_speaker);
-		}
 		inline bool IsRand()
 		{
 			return _random;
@@ -98,10 +90,9 @@ namespace DDR
 		std::vector<Response> _responses;
 		std::vector<RE::BGSVoiceType*> _voiceTypes;
 				
-		uint64_t _priority;
-
 		std::vector<std::string> _rawConditions;
-		std::shared_ptr<RE::TESCondition> _conditions = nullptr;
+
+		uint64_t _priority;
 
 		bool _valid = false;
 		bool _random = false;
@@ -133,7 +124,7 @@ namespace YAML
 		static bool decode(const Node& node, TopicInfo& rhs)
 		{
 			const auto topicInfo = node["id"].as<std::string>();
-			if (const auto parsed = Util::ParseFormId(topicInfo)) {
+			if (const auto parsed = DDR::Util::ParseFormId(topicInfo)) {
 				const auto [formId, espName] = parsed.value();
 				rhs._topicInfoId = RE::TESDataHandler::GetSingleton()->LookupFormID(formId, espName);
 			} else {

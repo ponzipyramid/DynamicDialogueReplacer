@@ -1,21 +1,21 @@
 #include "ConditionParser.h"
 #include "EnumLookup.h"
 
-// stolen from DAV (https://github.com/Exit-9B/DynamicArmorVariants)
+using namespace Conditions;
 
-using namespace DDR;
+// stolen from DAV (https://github.com/Exit-9B/DynamicArmorVariants)
 
 auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE::TESConditionItem*
 {
-	const auto splits = Util::Split(std::string{ a_text }, "<>"sv) 
-		| std::ranges::views::transform([](std::string& a_str) { return Util::trim(a_str); }) 
+	const auto splits = ConditionUtil::Split(std::string{ a_text }, "<>"sv) 
+		| std::ranges::views::transform([](std::string& a_str) { return ConditionUtil::trim(a_str); }) 
 		| std::ranges::to<std::vector>();
 
 	const std::string text{ splits.size() == 2 ? splits[1] : splits[0] };
 	const std::string refStr{ splits.size() == 2 ? splits[0] : "" };
 
 	static srell::regex re{
-		R"((\w+)\s+((\w+)(\s+(\w+))?\s*)?(==|!=|>|>=|<|<=)\s*(\w+)(\s+(AND|OR))?)"
+		R"((\w+)\s+((\w+)(\s+([\w:]+))?\s*)?(==|!=|>|>=|<|<=)\s*(\w+)(\s+(AND|OR))?)"
 	};
 
 	srell::cmatch m;
@@ -39,7 +39,7 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 		return nullptr;
 	}
 
-	auto functionIndex = Util::to_underlying(function->output) - 0x1000;
+	auto functionIndex = ConditionUtil::to_underlying(function->output) - 0x1000;
 	data.functionData.function = static_cast<RE::FUNCTION_DATA::FunctionID>(functionIndex);
 
 	if (mParam1.matched) {
@@ -54,7 +54,7 @@ auto ConditionParser::Parse(std::string_view a_text, const RefMap& a_refs) -> RE
 	if (mParam2.matched) {
 		if (function->numParams >= 2) {
 			data.functionData.params[1] = std::bit_cast<void*>(
-				ParseParam(mParam1.str(), function->params[1].paramType.get(), a_refs));
+				ParseParam(mParam2.str(), function->params[1].paramType.get(), a_refs));
 		} else {
 			logger::warn("Condition function {} ignoring parameter: {}", function->functionName, mParam2.str());
 		}
@@ -119,7 +119,7 @@ auto ConditionParser::ParseParam(
 {
 	ConditionParam param{};
 
-	auto textCIS = Util::str_toupper(a_text);
+	auto textCIS = ConditionUtil::str_toupper(a_text);
 
 	switch (a_type) {
 	case RE::SCRIPT_PARAM_TYPE::kChar:
@@ -132,7 +132,7 @@ auto ConditionParser::ParseParam(
 		param.f = std::stof(textCIS);
 		break;
 	case RE::SCRIPT_PARAM_TYPE::kActorValue:
-		param.i = Util::to_underlying(EnumLookup::LookupActorValue(textCIS));
+		param.i = ConditionUtil::to_underlying(EnumLookup::LookupActorValue(textCIS));
 		break;
 	case RE::SCRIPT_PARAM_TYPE::kAxis:
 		param.i = EnumLookup::LookupAxis(textCIS);
@@ -141,8 +141,14 @@ auto ConditionParser::ParseParam(
 		param.i = EnumLookup::LookupSex(textCIS);
 		break;
 	case RE::SCRIPT_PARAM_TYPE::kCastingSource:
-		param.i = Util::to_underlying(EnumLookup::LookupCastingSource(textCIS));
+		param.i = ConditionUtil::to_underlying(EnumLookup::LookupCastingSource(textCIS));
 		break;
+
+	case RE::SCRIPT_PARAM_TYPE::kVMScriptVar:
+		{
+			param.str = new RE::BSString(a_text.c_str());
+			break;
+		}	
 	default:
 		param.form = LookupForm(textCIS, a_refs);
 		break;
