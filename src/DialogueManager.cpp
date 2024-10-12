@@ -123,7 +123,7 @@ std::shared_ptr<TopicInfo> DialogueManager::FindReplacementResponse(RE::Characte
 
 		for (const auto& repl : replacements) {
 			const auto rand = repl->IsRand();
-			if ((candidates.empty() || rand) && repl->ConditionsMet(speaker, target)) {
+			if ((candidates.empty() || (rand && repl->GetPriority() >= candidates[0]->GetPriority())) && repl->ConditionsMet(speaker, target)) {
 				if (rand) {
 					candidates.push_back(repl);
 				} else {
