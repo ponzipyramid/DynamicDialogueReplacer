@@ -34,8 +34,8 @@ void Hooks::Install()
 		logger::error("Failed to install hook on PopulateTopicInfo");
 	}
 
-	_AddTopic = trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::RelocationID{ 34460, 35287 } }.address() + REL::Relocate(0xFA, 0x154), AddTopic);
-	trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::RelocationID{ 34477, 35304 } }.address() + REL::Relocate(0x79, 0x6C), AddTopic);
+	_AddTopic = trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::VariantID{ 34460, 35287, 0x05766F0 } }.address() + REL::Relocate(0xFA, 0x154), AddTopic);
+	trampoline.write_call<5>(REL::Relocation<std::uintptr_t>{ REL::VariantID{ 34477, 35304, 0x05778D0 } }.address() + REL::Relocate(0x79, 0x6C), AddTopic);
 
 	DialogueMenuEx::Install();
 
